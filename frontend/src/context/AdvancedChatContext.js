@@ -466,6 +466,7 @@ export const AdvancedChatProvider = ({ children }) => {
       setAppLocked,
       callInProgress,
       searchUserById,
+      searchUsers,
       getOrCreateConversation,
       createGroup,
       createChannel,
