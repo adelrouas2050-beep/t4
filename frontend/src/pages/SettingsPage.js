@@ -449,19 +449,19 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e1621]" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#0e1621]' : 'bg-gray-100'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-[#17212b] border-b border-[#232e3c] sticky top-0 z-50">
+      <div className={`${isDarkMode ? 'bg-[#17212b] border-[#232e3c]' : 'bg-white border-gray-200'} border-b sticky top-0 z-50`}>
         <div className="flex items-center h-14 px-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => activeSection ? setActiveSection(null) : navigate(-1)}
-            className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+            className={`${isDarkMode ? 'text-[#8b9eb0] hover:text-white hover:bg-[#232e3c]' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'} h-10 w-10 p-0`}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-white mr-4">
+          <h1 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mr-4`}>
             {activeSection 
               ? sections.find(s => s.id === activeSection)?.title 
               : t('الإعدادات', 'Settings')}
@@ -475,24 +475,51 @@ const SettingsPage = () => {
           renderSectionContent()
         ) : (
           <div className="space-y-2">
+            {/* Admin Panel Link (if admin) */}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className={`w-full flex items-center gap-4 p-4 ${isDarkMode ? 'bg-[#17212b] hover:bg-[#232e3c]' : 'bg-white hover:bg-gray-50'} rounded-lg transition-colors mb-4 border ${isDarkMode ? 'border-indigo-500/30' : 'border-indigo-200'}`}
+              >
+                <div className="w-10 h-10 bg-indigo-500/20 rounded-full flex items-center justify-center">
+                  <SettingsIcon className="w-5 h-5 text-indigo-400" />
+                </div>
+                <span className={`flex-1 text-right font-medium ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                  {t('لوحة التحكم', 'Admin Panel')}
+                </span>
+                <ChevronLeft className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-500'}`} />
+              </button>
+            )}
+
             {sections.map(section => (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className="w-full flex items-center gap-4 p-4 bg-[#17212b] rounded-lg hover:bg-[#232e3c] transition-colors"
+                className={`w-full flex items-center gap-4 p-4 ${isDarkMode ? 'bg-[#17212b] hover:bg-[#232e3c]' : 'bg-white hover:bg-gray-50'} rounded-lg transition-colors`}
               >
-                <div className={`w-10 h-10 bg-[#232e3c] rounded-full flex items-center justify-center ${section.color}`}>
+                <div className={`w-10 h-10 ${isDarkMode ? 'bg-[#232e3c]' : 'bg-gray-100'} rounded-full flex items-center justify-center ${section.color}`}>
                   <section.icon className="w-5 h-5" />
                 </div>
-                <span className="text-white flex-1 text-right">{section.title}</span>
-                <ChevronLeft className="w-5 h-5 text-[#6c7883]" />
+                <span className={`flex-1 text-right ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{section.title}</span>
+                <ChevronLeft className={`w-5 h-5 ${isDarkMode ? 'text-[#6c7883]' : 'text-gray-400'}`} />
               </button>
             ))}
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className={`w-full flex items-center gap-4 p-4 ${isDarkMode ? 'bg-[#17212b] hover:bg-red-500/10' : 'bg-white hover:bg-red-50'} rounded-lg transition-colors mt-4`}
+            >
+              <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                <LogOut className="w-5 h-5 text-red-400" />
+              </div>
+              <span className="text-red-400 flex-1 text-right font-medium">{t('تسجيل الخروج', 'Log Out')}</span>
+            </button>
 
             {/* Delete Account */}
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="w-full flex items-center gap-4 p-4 bg-[#17212b] rounded-lg hover:bg-red-500/10 transition-colors mt-8"
+              className={`w-full flex items-center gap-4 p-4 ${isDarkMode ? 'bg-[#17212b] hover:bg-red-500/10' : 'bg-white hover:bg-red-50'} rounded-lg transition-colors`}
             >
               <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
                 <UserX className="w-5 h-5 text-red-400" />
