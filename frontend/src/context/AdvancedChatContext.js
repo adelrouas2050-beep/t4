@@ -133,7 +133,7 @@ export const AdvancedChatProvider = ({ children }) => {
     return [];
   };
 
-  const getOrCreateConversation = (otherUserId, otherUserData = null) => {
+  const getOrCreateConversation = async (otherUserId, otherUserData = null) => {
     const existingConv = conversations.find(conv => 
       conv.type === 'private' && conv.participants.includes(otherUserId)
     );
@@ -150,10 +150,12 @@ export const AdvancedChatProvider = ({ children }) => {
     
     if (!otherUser) return null;
 
+    const userId = user?.userId || user?.id || 'user1';
+
     const newConv = {
       id: 'conv_' + Date.now(),
       type: 'private',
-      participants: ['user1', otherUserId],
+      participants: [userId, otherUserId],
       otherUser,
       lastMessage: null,
       unreadCount: 0,
@@ -165,6 +167,22 @@ export const AdvancedChatProvider = ({ children }) => {
 
     setConversations([newConv, ...conversations]);
     setMessages({ ...messages, [newConv.id]: [] });
+
+    // حفظ في قاعدة البيانات
+    try {
+      await fetch(`${API_URL}/api/chat/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'private',
+          participants: [userId, otherUserId],
+          createdBy: userId
+        })
+      });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+
     return newConv;
   };
 
