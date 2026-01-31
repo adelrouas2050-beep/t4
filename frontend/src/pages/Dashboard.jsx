@@ -18,17 +18,17 @@ import {
 
 const StatCard = ({ title, value, icon: Icon, change, changeType, color, loading }) => (
   <Card className="bg-[#18181b] border-white/10 card-hover" data-testid={`stat-${title.replace(/\s/g, '-').toLowerCase()}`}>
-    <CardContent className="p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">{title}</p>
+    <CardContent className="p-3 md:p-5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1 truncate">{title}</p>
           {loading ? (
-            <div className="h-8 w-24 bg-white/5 rounded animate-pulse"></div>
+            <div className="h-6 md:h-8 w-16 md:w-24 bg-white/5 rounded animate-pulse"></div>
           ) : (
-            <p className="text-2xl font-bold text-white">{value}</p>
+            <p className="text-lg md:text-2xl font-bold text-white">{value}</p>
           )}
           {change && !loading && (
-            <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${
+            <div className={`hidden sm:flex items-center gap-1 mt-2 text-xs font-medium ${
               changeType === 'up' ? 'text-emerald-400' : 'text-red-400'
             }`}>
               {changeType === 'up' ? (
@@ -37,12 +37,11 @@ const StatCard = ({ title, value, icon: Icon, change, changeType, color, loading
                 <ArrowDownRight className="w-3 h-3" />
               )}
               <span>{change}%</span>
-              <span className="text-zinc-500">من الشهر الماضي</span>
             </div>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-          <Icon className="w-6 h-6" strokeWidth={1.5} />
+        <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+          <Icon className="w-4 h-4 md:w-6 md:h-6" strokeWidth={1.5} />
         </div>
       </div>
     </CardContent>
