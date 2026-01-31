@@ -121,11 +121,16 @@ const ChatPage = () => {
   const [cloudFileType, setCloudFileType] = useState('all');
   
   // Call state
-  const [activeCall, setActiveCall] = useState(null); // { type: 'voice' | 'video', status: 'calling' | 'connected' | 'ended', startTime: Date }
+  const [activeCall, setActiveCall] = useState(null);
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  
+  // Deleted Messages / Restore state
+  const [showDeletedMessages, setShowDeletedMessages] = useState(false);
+  const [myDeletedMessages, setMyDeletedMessages] = useState([]);
+  const [loadingDeleted, setLoadingDeleted] = useState(false);
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
