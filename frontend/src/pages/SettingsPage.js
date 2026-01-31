@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -19,14 +19,20 @@ import {
   Globe, Moon, Sun, Volume2, VolumeX, Eye, EyeOff,
   Smartphone, MessageSquare, Image, Video, Download,
   Trash2, Shield, Key, UserX, Clock, CheckCircle,
-  ChevronLeft, Languages
+  ChevronLeft, Languages, LogOut, Settings as SettingsIcon
 } from 'lucide-react';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
   const { toast } = useToast();
+
+  // Theme state - load from localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -43,7 +49,6 @@ const SettingsPage = () => {
     readReceipts: true,
     
     // Appearance
-    darkMode: true,
     fontSize: 'medium', // small, medium, large
     chatBackground: 'default',
     
@@ -62,11 +67,34 @@ const SettingsPage = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
 
+  // Apply theme
+  useEffect(() => {
+    document.documentElement.classList.toggle('light-theme', !isDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
+
+  const toggleDarkMode = (value) => {
+    setIsDarkMode(value);
+    toast({
+      title: value ? t('الوضع الداكن', 'Dark Mode') : t('الوضع الفاتح', 'Light Mode'),
+      description: t('تم تغيير المظهر', 'Theme changed')
+    });
+  };
+
   const updateSetting = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     toast({
       title: t('تم الحفظ', 'Saved'),
       description: t('تم تحديث الإعدادات', 'Settings updated')
+    });
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    toast({
+      title: t('تم تسجيل الخروج', 'Logged Out'),
+      description: t('إلى اللقاء!', 'Goodbye!')
     });
   };
 
