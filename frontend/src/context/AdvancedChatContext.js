@@ -225,11 +225,118 @@ export const AdvancedChatProvider = ({ children }) => {
     ));
   };
 
+  const unarchiveConversation = (conversationId) => {
+    setConversations(conversations.map(conv => 
+      conv.id === conversationId ? { ...conv, archived: false } : conv
+    ));
+  };
+
   const deleteConversation = (conversationId) => {
     setConversations(conversations.filter(conv => conv.id !== conversationId));
     const newMessages = { ...messages };
     delete newMessages[conversationId];
     setMessages(newMessages);
+  };
+
+  const editMessage = (conversationId, messageId, newText, newTextEn) => {
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: prev[conversationId]?.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, text: newText, textEn: newTextEn, edited: true, editedAt: new Date().toISOString() }
+          : msg
+      ) || []
+    }));
+  };
+
+  const deleteMessage = (conversationId, messageId, deleteForBoth = false) => {
+    if (deleteForBoth) {
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: prev[conversationId]?.filter(msg => msg.id !== messageId) || []
+      }));
+    } else {
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: prev[conversationId]?.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, deleted: true, text: 'تم حذف هذه الرسالة', textEn: 'This message was deleted' }
+            : msg
+        ) || []
+      }));
+    }
+    
+    // Update last message if needed
+    const convMessages = messages[conversationId]?.filter(msg => msg.id !== messageId) || [];
+    if (convMessages.length > 0) {
+      const lastMsg = convMessages[convMessages.length - 1];
+      setConversations(conversations.map(conv => 
+        conv.id === conversationId ? { ...conv, lastMessage: lastMsg } : conv
+      ));
+    }
+  };
+
+  // Stories functions
+  const addStory = (storyData) => {
+    const newStory = {
+      id: 'story_' + Date.now(),
+      userId: 'user1',
+      user: mockUsers[0],
+      ...storyData,
+      timestamp: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      views: [],
+      viewCount: 0
+    };
+    setMyStories(prev => [...prev, newStory]);
+    return newStory;
+  };
+
+  const viewStory = (storyId, viewerId) => {
+    setStories(prev => prev.map(userStories => ({
+      ...userStories,
+      stories: userStories.stories.map(story => 
+        story.id === storyId && !story.views.includes(viewerId)
+          ? { ...story, views: [...story.views, viewerId], viewCount: story.viewCount + 1 }
+          : story
+      )
+    })));
+  };
+
+  const deleteStory = (storyId) => {
+    setMyStories(prev => prev.filter(story => story.id !== storyId));
+  };
+
+  const getActiveStories = () => {
+    const now = new Date();
+    return stories.filter(userStories => 
+      userStories.stories.some(story => new Date(story.expiresAt) > now)
+    );
+  };
+
+  // Cloud Storage functions
+  const uploadFile = (fileData) => {
+    const newFile = {
+      id: 'file_' + Date.now(),
+      ...fileData,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: 'user1'
+    };
+    setCloudFiles(prev => [...prev, newFile]);
+    return newFile;
+  };
+
+  const deleteFile = (fileId) => {
+    setCloudFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  const getCloudFiles = (type = null) => {
+    if (!type) return cloudFiles;
+    return cloudFiles.filter(file => file.type === type);
+  };
+
+  const getStorageUsed = () => {
+    return cloudFiles.reduce((total, file) => total + (file.size || 0), 0);
   };
 
   const markAsRead = (conversationId) => {
