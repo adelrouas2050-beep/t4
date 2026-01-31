@@ -613,6 +613,7 @@ export const AdvancedChatProvider = ({ children }) => {
       archiveConversation,
       unarchiveConversation,
       deleteConversation,
+      clearConversationHistory,
       editMessage,
       deleteMessage,
       markAsRead,
