@@ -521,7 +521,10 @@ const ChatPage = () => {
     setSelectedMessages([]);
   };
 
-  const handleClearHistory = (deleteForBoth) => {
+  const handleClearHistory = async (deleteForBoth) => {
+    if (activeConversation) {
+      await clearConversationHistory(activeConversation.id);
+    }
     toast({
       title: t('تم مسح السجل', 'History Cleared'),
       description: deleteForBoth 
@@ -531,9 +534,9 @@ const ChatPage = () => {
     setClearHistoryDialog(false);
   };
 
-  const handleDeleteConversation = (deleteForBoth) => {
+  const handleDeleteConversation = async (deleteForBoth) => {
     if (activeConversation) {
-      deleteConversation(activeConversation.id);
+      await deleteConversation(activeConversation.id);
     }
     toast({
       title: t('تم الحذف', 'Deleted'),
