@@ -180,8 +180,28 @@ export const AdvancedChatProvider = ({ children }) => {
 
     const userId = user?.userId || user?.id || 'user1';
 
+    // حفظ في قاعدة البيانات أولاً للحصول على ID الصحيح
+    let convId = 'conv_' + Date.now();
+    try {
+      const response = await fetch(`${API_URL}/api/chat/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'private',
+          participants: [userId, otherUserId],
+          createdBy: userId
+        })
+      });
+      if (response.ok) {
+        const savedConv = await response.json();
+        convId = savedConv.id; // استخدام ID من قاعدة البيانات
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+
     const newConv = {
-      id: 'conv_' + Date.now(),
+      id: convId,
       type: 'private',
       participants: [userId, otherUserId],
       otherUser,
@@ -195,21 +215,6 @@ export const AdvancedChatProvider = ({ children }) => {
 
     setConversations([newConv, ...conversations]);
     setMessages({ ...messages, [newConv.id]: [] });
-
-    // حفظ في قاعدة البيانات
-    try {
-      await fetch(`${API_URL}/api/chat/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'private',
-          participants: [userId, otherUserId],
-          createdBy: userId
-        })
-      });
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-    }
 
     return newConv;
   };
