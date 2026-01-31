@@ -141,21 +141,51 @@ export const AuthProvider = ({ children }) => {
     return { success: true, isAdmin: false };
   };
 
-  const register = (userData, type = 'rider') => {
-    // Mock register - in real app, this would call backend API
-    const newUser = {
-      ...mockUser,
-      ...userData,
-      id: 'user_' + Date.now()
-    };
-    setUser(newUser);
-    setIsAuthenticated(true);
-    setUserType(type);
-    setIsAdmin(false);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    localStorage.setItem('userType', type);
-    localStorage.setItem('isAdmin', 'false');
-    return { success: true };
+  const register = async (userData, type = 'rider') => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          userId: userData.userId,
+          phone: userData.phone || '',
+          password: userData.password,
+          userType: type
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.detail || 'فشل التسجيل', errorEn: data.detail || 'Registration failed' };
+      }
+
+      const newUser = {
+        id: data.user.userId,
+        userId: data.user.userId,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone,
+        userType: data.user.userType
+      };
+
+      setUser(newUser);
+      setIsAuthenticated(true);
+      setUserType(type);
+      setIsAdmin(false);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem('userType', type);
+      localStorage.setItem('isAdmin', 'false');
+      localStorage.setItem('userToken', data.token);
+      return { success: true };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: 'حدث خطأ في الاتصال', errorEn: 'Connection error' };
+    }
   };
 
   const logout = () => {
