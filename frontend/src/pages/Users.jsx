@@ -105,11 +105,13 @@ export default function Users() {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   
-  // Add User state
+  // Add/Edit User state
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  const [showEditUserDialog, setShowEditUserDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormState);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const getToken = () => localStorage.getItem('token');
 
