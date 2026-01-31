@@ -353,14 +353,20 @@ export const AdvancedChatProvider = ({ children }) => {
   };
 
   const getFilteredConversations = () => {
-    let filtered = conversations.filter(conv => !conv.archived);
+    let filtered = conversations;
     
-    if (activeFolder === 'Personal') {
-      filtered = filtered.filter(conv => conv.type === 'private');
-    } else if (activeFolder === 'Groups') {
-      filtered = filtered.filter(conv => conv.type === 'group');
-    } else if (activeFolder === 'Channels') {
-      filtered = filtered.filter(conv => conv.type === 'channel');
+    if (activeFolder === 'Archived') {
+      filtered = filtered.filter(conv => conv.archived);
+    } else {
+      filtered = filtered.filter(conv => !conv.archived);
+      
+      if (activeFolder === 'Personal') {
+        filtered = filtered.filter(conv => conv.type === 'private');
+      } else if (activeFolder === 'Groups') {
+        filtered = filtered.filter(conv => conv.type === 'group');
+      } else if (activeFolder === 'Channels') {
+        filtered = filtered.filter(conv => conv.type === 'channel');
+      }
     }
     
     return filtered.sort((a, b) => {
@@ -368,6 +374,10 @@ export const AdvancedChatProvider = ({ children }) => {
       if (!a.pinned && b.pinned) return 1;
       return new Date(b.updatedAt) - new Date(a.updatedAt);
     });
+  };
+
+  const getArchivedCount = () => {
+    return conversations.filter(conv => conv.archived).length;
   };
 
   return (
