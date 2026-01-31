@@ -199,6 +199,7 @@ const AppRoutes = () => {
         <Route path="rides" element={<Rides />} />
         <Route path="orders" element={<Orders />} />
         <Route path="promotions" element={<Promotions />} />
+        <Route path="trash" element={<Trash />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
