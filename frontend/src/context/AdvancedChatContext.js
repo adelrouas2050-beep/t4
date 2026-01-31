@@ -65,13 +65,41 @@ export const AdvancedChatProvider = ({ children }) => {
         if (response.ok) {
           const dbConversations = await response.json();
           if (dbConversations.length > 0) {
-            setConversations(dbConversations);
+            // إضافة بيانات المستخدم الآخر لكل محادثة
+            const conversationsWithUsers = await Promise.all(
+              dbConversations.map(async (conv) => {
+                if (conv.type === 'private') {
+                  const otherUserId = conv.participants.find(p => p !== userId);
+                  if (otherUserId) {
+                    try {
+                      const userResponse = await fetch(`${API_URL}/api/auth/user/${otherUserId}`);
+                      if (userResponse.ok) {
+                        const otherUserData = await userResponse.json();
+                        return { ...conv, otherUser: otherUserData };
+                      }
+                    } catch (e) {
+                      console.error('Error fetching other user:', e);
+                    }
+                  }
+                }
+                return conv;
+              })
+            );
+            
+            setConversations(conversationsWithUsers);
+            
             // جلب الرسائل لكل محادثة
             const messagesObj = {};
             for (const conv of dbConversations) {
               const msgResponse = await fetch(`${API_URL}/api/chat/messages/${conv.id}`);
               if (msgResponse.ok) {
-                messagesObj[conv.id] = await msgResponse.json();
+                const msgs = await msgResponse.json();
+                // تحويل الرسائل للشكل المطلوب
+                messagesObj[conv.id] = msgs.map(m => ({
+                  ...m,
+                  text: m.content,
+                  timestamp: m.createdAt
+                }));
               }
             }
             setMessages(messagesObj);
