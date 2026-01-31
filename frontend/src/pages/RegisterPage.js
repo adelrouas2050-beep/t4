@@ -158,14 +158,14 @@ const RegisterPage = () => {
 
           <div className="space-y-2">
             <Label htmlFor="userId">
-              {t('الآيدي (ID)', 'User ID')} <span className="text-red-500">*</span>
+              {t('اسم المستخدم', 'Username')} <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 id="userId"
                 name="userId"
-                placeholder={t('أدخل الآيدي (مثال: TV12345)', 'Enter User ID (e.g., TV12345)')}
+                placeholder={t('أدخل اسم المستخدم (مثال: ahmed123)', 'Enter Username (e.g., ahmed123)')}
                 value={formData.userId}
                 onChange={handleChange}
                 className="pl-10"
@@ -174,7 +174,7 @@ const RegisterPage = () => {
               />
             </div>
             <p className="text-xs text-slate-500">
-              {t('سيستخدم هذا الآيدي للبحث عنك في الدردشة', 'This ID will be used to find you in chat')}
+              {t('سيستخدم اسم المستخدم للبحث عنك في الدردشة', 'This username will be used to find you in chat')}
             </p>
           </div>
 
