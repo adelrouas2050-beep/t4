@@ -405,6 +405,60 @@ async def check_user_exists(user_id: str):
     existing = await db.registered_users.find_one({"userId": user_id}, {"_id": 0})
     return {"exists": existing is not None}
 
+@auth_router.get("/search-users")
+async def search_users(q: str = ""):
+    """البحث عن المستخدمين بالاسم أو اسم المستخدم أو البريد"""
+    if not q or len(q) < 2:
+        return {"users": []}
+    
+    # البحث في registered_users
+    query = {
+        "$or": [
+            {"userId": {"$regex": q, "$options": "i"}},
+            {"name": {"$regex": q, "$options": "i"}},
+            {"email": {"$regex": q, "$options": "i"}}
+        ]
+    }
+    
+    users = await db.registered_users.find(query, {"_id": 0, "password": 0}).to_list(20)
+    
+    # تحويل الحقول للشكل المطلوب للدردشة
+    result = []
+    for user in users:
+        result.append({
+            "id": user.get("userId", ""),
+            "userId": user.get("userId", ""),
+            "name": user.get("name", ""),
+            "nameEn": user.get("name", ""),
+            "email": user.get("email", ""),
+            "phone": user.get("phone", ""),
+            "photo": f"https://ui-avatars.com/api/?name={user.get('name', '')}&background=5288c1&color=fff",
+            "status": "online",
+            "userType": user.get("userType", "rider")
+        })
+    
+    return {"users": result}
+
+@auth_router.get("/user/{user_id}")
+async def get_user_by_id(user_id: str):
+    """جلب مستخدم بواسطة اسم المستخدم"""
+    user = await db.registered_users.find_one({"userId": user_id}, {"_id": 0, "password": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    return {
+        "id": user.get("userId", ""),
+        "userId": user.get("userId", ""),
+        "name": user.get("name", ""),
+        "nameEn": user.get("name", ""),
+        "email": user.get("email", ""),
+        "phone": user.get("phone", ""),
+        "photo": f"https://ui-avatars.com/api/?name={user.get('name', '')}&background=5288c1&color=fff",
+        "status": "online",
+        "userType": user.get("userType", "rider")
+    }
+
 @auth_router.get("/me")
 async def get_current_admin(payload: dict = Depends(verify_token)):
     admin = await db.admins.find_one({"email": payload["email"]}, {"_id": 0, "password": 0})
