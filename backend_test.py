@@ -65,20 +65,170 @@ class UserRegistrationAPITester:
         except Exception as e:
             return False, None, str(e)
 
-    def test_login(self):
-        """Test JWT login functionality"""
-        print("\n🔐 Testing Authentication...")
+    def test_check_user_exists(self):
+        """Test checking if user ID exists"""
+        print("\n🔍 Testing User ID Check...")
         
-        # Test with correct credentials
+        # Test with non-existent user
+        success, response_data, status = self.make_request(
+            'GET', f'auth/check-user/nonexistent_user_123', expected_status=200
+        )
+        
+        if success and response_data and 'exists' in response_data:
+            if not response_data['exists']:
+                self.log_result("Check Non-existent User", True)
+            else:
+                self.log_result("Check Non-existent User", False, response_data, "User should not exist")
+        else:
+            self.log_result("Check Non-existent User", False, response_data, f"Status: {status}")
+        
+        # Test with existing user (testuser123 mentioned in context)
+        success, response_data, status = self.make_request(
+            'GET', f'auth/check-user/testuser123', expected_status=200
+        )
+        
+        if success and response_data and 'exists' in response_data:
+            self.log_result("Check Existing User", True)
+            print(f"   testuser123 exists: {response_data['exists']}")
+        else:
+            self.log_result("Check Existing User", False, response_data, f"Status: {status}")
+
+    def test_user_registration(self):
+        """Test user registration with all required fields"""
+        print("\n📝 Testing User Registration...")
+        
+        # Test successful registration
+        registration_data = {
+            "name": "مستخدم تجريبي",
+            "email": self.test_email,
+            "userId": self.test_user_id,
+            "phone": "+966501234567",
+            "password": "testpass123",
+            "userType": "rider"
+        }
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/register', registration_data, expected_status=200
+        )
+        
+        if success and response_data and response_data.get('success'):
+            self.log_result("User Registration", True)
+            print(f"   Registered user: {response_data['user']['name']}")
+            print(f"   User ID: {response_data['user']['userId']}")
+            print(f"   Email: {response_data['user']['email']}")
+            if 'token' in response_data:
+                self.token = response_data['token']
+                print(f"   Token received: {self.token[:20]}...")
+        else:
+            self.log_result("User Registration", False, response_data, f"Status: {status}")
+            return False
+        
+        # Test duplicate userId registration
+        duplicate_data = registration_data.copy()
+        duplicate_data['email'] = f"different_{self.test_email}"
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/register', duplicate_data, expected_status=400
+        )
+        
+        if success:
+            self.log_result("Duplicate UserID Validation", True)
+            print(f"   Error message: {response_data.get('detail', 'No error message')}")
+        else:
+            self.log_result("Duplicate UserID Validation", False, response_data, f"Status: {status}")
+        
+        # Test duplicate email registration
+        duplicate_email_data = {
+            "name": "مستخدم آخر",
+            "email": self.test_email,  # Same email
+            "userId": f"different_{self.test_user_id}",
+            "phone": "+966502345678",
+            "password": "testpass456",
+            "userType": "driver"
+        }
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/register', duplicate_email_data, expected_status=400
+        )
+        
+        if success:
+            self.log_result("Duplicate Email Validation", True)
+            print(f"   Error message: {response_data.get('detail', 'No error message')}")
+        else:
+            self.log_result("Duplicate Email Validation", False, response_data, f"Status: {status}")
+        
+        return True
+
+    def test_user_login(self):
+        """Test user login functionality"""
+        print("\n🔐 Testing User Login...")
+        
+        # Test successful login
+        login_data = {
+            "email": self.test_email,
+            "password": "testpass123",
+            "userType": "rider"
+        }
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/user-login', login_data, expected_status=200
+        )
+        
+        if success and response_data and response_data.get('success'):
+            self.log_result("User Login", True)
+            print(f"   Logged in user: {response_data['user']['name']}")
+            print(f"   User ID: {response_data['user']['userId']}")
+            if 'token' in response_data:
+                print(f"   Token received: {response_data['token'][:20]}...")
+        else:
+            self.log_result("User Login", False, response_data, f"Status: {status}")
+        
+        # Test login with wrong password
+        wrong_password_data = login_data.copy()
+        wrong_password_data['password'] = "wrongpassword"
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/user-login', wrong_password_data, expected_status=401
+        )
+        
+        if success:
+            self.log_result("Wrong Password Validation", True)
+            print(f"   Error message: {response_data.get('detail', 'No error message')}")
+        else:
+            self.log_result("Wrong Password Validation", False, response_data, f"Status: {status}")
+        
+        # Test login with non-existent email
+        nonexistent_email_data = {
+            "email": "nonexistent@example.com",
+            "password": "testpass123",
+            "userType": "rider"
+        }
+        
+        success, response_data, status = self.make_request(
+            'POST', 'auth/user-login', nonexistent_email_data, expected_status=401
+        )
+        
+        if success:
+            self.log_result("Non-existent Email Validation", True)
+            print(f"   Error message: {response_data.get('detail', 'No error message')}")
+        else:
+            self.log_result("Non-existent Email Validation", False, response_data, f"Status: {status}")
+
+    def test_admin_login(self):
+        """Test admin login functionality"""
+        print("\n👑 Testing Admin Login...")
+        
+        # Test with correct admin credentials
         success, response_data, status = self.make_request(
             'POST', 'auth/login', 
             {"email": "admin@transfers.com", "password": "admin123"}
         )
         
         if success and response_data and 'token' in response_data:
-            self.token = response_data['token']
             self.log_result("Admin Login", True)
-            print(f"   Token received: {self.token[:20]}...")
+            print(f"   Admin: {response_data.get('name', 'Unknown')}")
+            print(f"   Role: {response_data.get('role', 'Unknown')}")
+            print(f"   Token received: {response_data['token'][:20]}...")
             return True
         else:
             self.log_result("Admin Login", False, response_data, f"Status: {status}")
