@@ -411,7 +411,16 @@ export const AdvancedChatProvider = ({ children }) => {
     }));
   };
 
-  const deleteMessage = (conversationId, messageId, deleteForBoth = false) => {
+  const deleteMessage = async (conversationId, messageId, deleteForBoth = false) => {
+    // حذف من قاعدة البيانات
+    try {
+      await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error deleting message from database:', error);
+    }
+
     if (deleteForBoth) {
       setMessages(prev => ({
         ...prev,
