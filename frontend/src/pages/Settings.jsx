@@ -405,6 +405,170 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Database Backup Settings */}
+          <Card className="bg-[#18181b] border-white/10" data-testid="backup-settings-card">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Database className="w-5 h-5 text-cyan-400" />
+                النسخ الاحتياطي لقاعدة البيانات
+              </CardTitle>
+              <CardDescription className="text-zinc-500">
+                حفظ واستعادة بيانات النظام
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Auto Backup Settings */}
+              <div className="p-4 bg-white/5 rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-cyan-400" />
+                    <div>
+                      <p className="text-white font-medium">النسخ الاحتياطي التلقائي</p>
+                      <p className="text-xs text-zinc-500">يتم حفظ نسخة تلقائياً كل {backupSettings.interval_hours} ساعات</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={backupSettings.auto_backup_enabled}
+                    onCheckedChange={(checked) => handleUpdateBackupSettings(checked, backupSettings.interval_hours)}
+                    data-testid="auto-backup-switch"
+                  />
+                </div>
+                
+                {backupSettings.auto_backup_enabled && (
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                      <Label className="text-zinc-400 text-xs">الفترة الزمنية</Label>
+                      <Select 
+                        value={String(backupSettings.interval_hours)} 
+                        onValueChange={(val) => handleUpdateBackupSettings(backupSettings.auto_backup_enabled, parseInt(val))}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white" data-testid="backup-interval-select">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#18181b] border-white/10">
+                          <SelectItem value="1" className="text-zinc-300">كل ساعة</SelectItem>
+                          <SelectItem value="3" className="text-zinc-300">كل 3 ساعات</SelectItem>
+                          <SelectItem value="6" className="text-zinc-300">كل 6 ساعات</SelectItem>
+                          <SelectItem value="12" className="text-zinc-300">كل 12 ساعة</SelectItem>
+                          <SelectItem value="24" className="text-zinc-300">يومياً</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-zinc-400 text-xs">آخر نسخة</Label>
+                      <p className="text-white text-sm py-2">
+                        {backupSettings.last_backup ? formatDate(backupSettings.last_backup) : 'لم يتم بعد'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Backup Button */}
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleCreateBackup}
+                  disabled={isBackingUp}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
+                  data-testid="manual-backup-btn"
+                >
+                  {isBackingUp ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 ml-2" />
+                      نسخ احتياطي الآن
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Backups List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-medium flex items-center gap-2">
+                    <HardDrive className="w-4 h-4" />
+                    النسخ المحفوظة
+                  </h4>
+                  <Badge variant="outline" className="border-white/20 text-zinc-400">
+                    {backups.length} نسخة
+                  </Badge>
+                </div>
+                
+                {loadingBackups ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                  </div>
+                ) : backups.length === 0 ? (
+                  <div className="text-center py-8 text-zinc-500">
+                    <Database className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>لا توجد نسخ احتياطية</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {backups.map((backup) => (
+                      <div 
+                        key={backup.id}
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            backup.type === 'auto' ? 'bg-cyan-500/20' : 'bg-indigo-500/20'
+                          }`}>
+                            {backup.type === 'auto' ? (
+                              <Clock className="w-5 h-5 text-cyan-400" />
+                            ) : (
+                              <Download className="w-5 h-5 text-indigo-400" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-white text-sm font-medium">{backup.filename}</p>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                              <span>{formatDate(backup.created_at)}</span>
+                              <span>•</span>
+                              <span>{formatSize(backup.size)}</span>
+                              <Badge variant="outline" className={`text-[10px] py-0 ${
+                                backup.type === 'auto' ? 'border-cyan-500/50 text-cyan-400' : 'border-indigo-500/50 text-indigo-400'
+                              }`}>
+                                {backup.type === 'auto' ? 'تلقائي' : 'يدوي'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBackup(backup);
+                              setRestoreDialogOpen(true);
+                            }}
+                            className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+                            data-testid={`restore-backup-${backup.id}`}
+                          >
+                            <Upload className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteBackup(backup.id)}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            data-testid={`delete-backup-${backup.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
