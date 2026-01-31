@@ -269,6 +269,30 @@ class MessageCreate(BaseModel):
     fileName: Optional[str] = None
     replyTo: Optional[str] = None
 
+# نموذج الرسائل المحذوفة (سلة المهملات)
+class DeletedMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    originalMessageId: str
+    conversationId: str
+    senderId: str
+    senderName: str
+    content: str
+    type: str = "text"
+    fileUrl: Optional[str] = None
+    fileName: Optional[str] = None
+    deletedBy: str  # من قام بالحذف
+    deletedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    expiresAt: str = Field(default_factory=lambda: (datetime.now(timezone.utc) + timedelta(days=30)).isoformat())
+    restoreRequestedBy: Optional[str] = None  # من طلب الاستعادة
+    restoreRequestedAt: Optional[str] = None
+    status: str = "deleted"  # deleted, restore_requested, restored, permanently_deleted
+
+class RestoreRequest(BaseModel):
+    messageId: str
+    requestedBy: str
+    reason: Optional[str] = None
+
 class Conversation(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
