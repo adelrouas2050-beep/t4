@@ -632,6 +632,65 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Restore Confirmation Dialog */}
+      <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <DialogContent className="bg-[#18181b] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-400">
+              <AlertCircle className="w-5 h-5" />
+              تأكيد استعادة النسخة الاحتياطية
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟ سيتم استبدال جميع البيانات الحالية.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedBackup && (
+            <div className="p-4 bg-white/5 rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">الملف:</span>
+                <span className="text-white font-mono text-sm">{selectedBackup.filename}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">تاريخ الإنشاء:</span>
+                <span className="text-white">{formatDate(selectedBackup.created_at)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">الحجم:</span>
+                <span className="text-white">{formatSize(selectedBackup.size)}</span>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setRestoreDialogOpen(false)}
+              className="border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300"
+            >
+              إلغاء
+            </Button>
+            <Button 
+              onClick={handleRestoreBackup}
+              disabled={isRestoring}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {isRestoring ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الاستعادة...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 ml-2" />
+                  استعادة
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
