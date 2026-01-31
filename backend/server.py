@@ -415,7 +415,29 @@ async def get_current_admin(payload: dict = Depends(verify_token)):
 
 @users_router.get("", response_model=List[User])
 async def get_users(payload: dict = Depends(verify_token)):
+    # جلب المستخدمين من كلا الجدولين
     users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    
+    # جلب المستخدمين المسجلين وتحويلهم للشكل المطلوب
+    registered = await db.registered_users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    for reg_user in registered:
+        # تحويل الحقول لتتوافق مع نموذج User
+        user_data = {
+            "id": reg_user.get("userId", ""),
+            "name": reg_user.get("name", ""),
+            "email": reg_user.get("email", ""),
+            "phone": reg_user.get("phone", ""),
+            "status": "active",
+            "rides": 0,
+            "orders": 0,
+            "joined": reg_user.get("createdAt", "")[:10] if reg_user.get("createdAt") else "",
+            "avatar": f"https://ui-avatars.com/api/?name={reg_user.get('name', '')}&background=6366f1&color=fff",
+            "username": reg_user.get("userId", "")
+        }
+        # تجنب التكرار
+        if not any(u.get("id") == user_data["id"] or u.get("email") == user_data["email"] for u in users):
+            users.append(user_data)
+    
     return users
 
 @users_router.post("", response_model=User)
