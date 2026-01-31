@@ -28,7 +28,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const result = login(email, password, userType);
+      const result = await login(email, password, userType);
       if (result.success) {
         if (result.isAdmin) {
           // Admin login - go to rider dashboard (they can access admin panel from there)
