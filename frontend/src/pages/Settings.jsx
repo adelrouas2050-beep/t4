@@ -231,9 +231,6 @@ export default function Settings() {
     });
   };
 
-export default function Settings() {
-  const { language, currency, setCurrency } = useAdmin();
-
   return (
     <div className="space-y-6" data-testid="settings-page">
       {/* Header */}
