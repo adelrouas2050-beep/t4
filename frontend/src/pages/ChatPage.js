@@ -506,7 +506,14 @@ const ChatPage = () => {
     setSelectedMessages([]);
   };
 
-  const handleDeleteSelectedMessages = () => {
+  const handleDeleteSelectedMessages = async () => {
+    if (!activeConversation || selectedMessages.length === 0) return;
+    
+    // حذف كل الرسائل المحددة
+    for (const msgId of selectedMessages) {
+      await deleteMessage(activeConversation.id, msgId, true);
+    }
+    
     toast({
       title: t('تم الحذف', 'Deleted'),
       description: t(`تم حذف ${selectedMessages.length} رسائل`, `${selectedMessages.length} messages deleted`)
