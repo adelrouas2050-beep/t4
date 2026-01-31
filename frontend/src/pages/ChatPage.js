@@ -1281,6 +1281,7 @@ const ChatPage = () => {
                       variant="ghost"
                       size="sm"
                       className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                      onClick={() => startCall('voice')}
                       data-testid="call-btn"
                     >
                       <Phone className="w-5 h-5" />
@@ -1289,6 +1290,7 @@ const ChatPage = () => {
                       variant="ghost"
                       size="sm"
                       className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                      onClick={() => startCall('video')}
                       data-testid="video-btn"
                     >
                       <Video className="w-5 h-5" />
