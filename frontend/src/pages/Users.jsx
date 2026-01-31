@@ -131,8 +131,9 @@ export default function Users() {
   };
 
   // Form validation
-  const validateForm = () => {
+  const validateForm = (isEdit = false) => {
     const errors = {};
+    const currentUserId = editingUser?.id;
     
     // Username validation (required)
     if (!formData.username.trim()) {
@@ -141,7 +142,7 @@ export default function Users() {
       errors.username = 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       errors.username = 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط';
-    } else if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase())) {
+    } else if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase() && u.id !== currentUserId)) {
       errors.username = 'اسم المستخدم مستخدم بالفعل';
     }
     
@@ -157,7 +158,7 @@ export default function Users() {
       errors.email = 'البريد الإلكتروني مطلوب';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'البريد الإلكتروني غير صحيح';
-    } else if (users.some(u => u.email?.toLowerCase() === formData.email.toLowerCase())) {
+    } else if (users.some(u => u.email?.toLowerCase() === formData.email.toLowerCase() && u.id !== currentUserId)) {
       errors.email = 'البريد الإلكتروني مستخدم بالفعل';
     }
     
@@ -176,6 +177,74 @@ export default function Users() {
     // Clear error when user starts typing
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Open edit dialog
+  const handleOpenEditDialog = (user) => {
+    setEditingUser(user);
+    setFormData({
+      username: user.username || '',
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      status: user.status || 'active'
+    });
+    setFormErrors({});
+    setShowEditUserDialog(true);
+  };
+
+  // Close edit dialog
+  const handleCloseEditDialog = () => {
+    setShowEditUserDialog(false);
+    setEditingUser(null);
+    setFormData(initialFormState);
+    setFormErrors({});
+  };
+
+  // Edit existing user
+  const handleEditUser = async () => {
+    if (!validateForm(true)) return;
+    if (!editingUser) return;
+    
+    setIsSubmitting(true);
+    try {
+      const updatedUser = {
+        username: formData.username.trim().toLowerCase(),
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim() || null,
+        status: formData.status
+      };
+      
+      const response = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}` 
+        },
+        body: JSON.stringify(updatedUser)
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'تم تحديث المستخدم',
+          description: `تم تحديث بيانات ${formData.name} بنجاح`,
+        });
+        handleCloseEditDialog();
+        await fetchUsers();
+      } else {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to update user');
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل تحديث المستخدم',
+        description: error.message || 'حدث خطأ أثناء تحديث المستخدم',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
