@@ -863,6 +863,7 @@ app.include_router(rides_router)
 app.include_router(orders_router)
 app.include_router(promotions_router)
 app.include_router(stats_router)
+app.include_router(backup_router)
 
 app.add_middleware(
     CORSMiddleware,
