@@ -275,16 +275,66 @@ const SettingsPage = () => {
       case 'appearance':
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-[#17212b] rounded-lg">
-              <div className="flex items-center gap-3">
-                <Moon className="w-5 h-5 text-[#5288c1]" />
-                <span className="text-white">{t('الوضع الداكن', 'Dark Mode')}</span>
+            {/* Dark/Light Mode Toggle */}
+            <div className="p-4 bg-[#17212b] dark:bg-[#17212b] light-theme:bg-white rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                {isDarkMode ? (
+                  <Moon className="w-5 h-5 text-[#5288c1]" />
+                ) : (
+                  <Sun className="w-5 h-5 text-amber-400" />
+                )}
+                <span className="text-white light-theme:text-gray-900 font-medium">
+                  {t('المظهر', 'Theme')}
+                </span>
               </div>
-              <Switch
-                checked={settings.darkMode}
-                onCheckedChange={(v) => updateSetting('darkMode', v)}
-              />
+              
+              {/* Theme Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => toggleDarkMode(false)}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    !isDarkMode 
+                      ? 'border-[#5288c1] bg-[#5288c1]/10' 
+                      : 'border-[#232e3c] hover:border-[#3d4d5c]'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                      <Sun className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <span className={`text-sm font-medium ${!isDarkMode ? 'text-[#5288c1]' : 'text-[#8b9eb0]'}`}>
+                      {t('فاتح', 'Light')}
+                    </span>
+                  </div>
+                  {!isDarkMode && (
+                    <CheckCircle className="w-5 h-5 text-[#5288c1] mx-auto mt-2" />
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => toggleDarkMode(true)}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    isDarkMode 
+                      ? 'border-[#5288c1] bg-[#5288c1]/10' 
+                      : 'border-[#232e3c] hover:border-[#3d4d5c]'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                      <Moon className="w-6 h-6 text-slate-300" />
+                    </div>
+                    <span className={`text-sm font-medium ${isDarkMode ? 'text-[#5288c1]' : 'text-[#8b9eb0]'}`}>
+                      {t('داكن', 'Dark')}
+                    </span>
+                  </div>
+                  {isDarkMode && (
+                    <CheckCircle className="w-5 h-5 text-[#5288c1] mx-auto mt-2" />
+                  )}
+                </button>
+              </div>
             </div>
+            
+            {/* Font Size */}
             <div className="p-4 bg-[#17212b] rounded-lg">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-white">{t('حجم الخط', 'Font Size')}</span>
