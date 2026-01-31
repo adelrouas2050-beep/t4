@@ -52,7 +52,7 @@ const RegisterPage = () => {
     if (!formData.userId || formData.userId.length < 5) {
       toast({
         title: t('خطأ', 'Error'),
-        description: t('الرجاء إدخال ID صالح (5 أحرف على الأقل)', 'Please enter valid ID (at least 5 characters)'),
+        description: t('الرجاء إدخال اسم مستخدم صالح (5 أحرف على الأقل)', 'Please enter valid username (at least 5 characters)'),
         variant: 'destructive'
       });
       return;
