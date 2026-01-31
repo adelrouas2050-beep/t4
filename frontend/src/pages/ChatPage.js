@@ -52,6 +52,7 @@ const ChatPage = () => {
     activeConversation,
     setActiveConversation,
     searchUserById,
+    searchUsers,
     getOrCreateConversation,
     sendMessage,
     markAsRead,
