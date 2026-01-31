@@ -920,12 +920,38 @@ async def root():
 
 @chat_router.get("/conversations/{user_id}")
 async def get_user_conversations(user_id: str):
-    """جلب محادثات المستخدم"""
+    """جلب محادثات المستخدم مع بيانات المستخدم الآخر"""
     conversations = await db.conversations.find(
         {"participants": user_id},
         {"_id": 0}
     ).sort("lastMessageAt", -1).to_list(100)
-    return conversations
+    
+    # إضافة بيانات المستخدم الآخر لكل محادثة
+    result = []
+    for conv in conversations:
+        conv_data = dict(conv)
+        if conv.get("type") == "private":
+            # إيجاد المستخدم الآخر
+            other_user_id = next((p for p in conv.get("participants", []) if p != user_id), None)
+            if other_user_id:
+                other_user = await db.registered_users.find_one(
+                    {"userId": other_user_id}, 
+                    {"_id": 0, "password": 0}
+                )
+                if other_user:
+                    conv_data["otherUser"] = {
+                        "id": other_user.get("userId", ""),
+                        "userId": other_user.get("userId", ""),
+                        "name": other_user.get("name", ""),
+                        "nameEn": other_user.get("name", ""),
+                        "email": other_user.get("email", ""),
+                        "phone": other_user.get("phone", ""),
+                        "photo": f"https://ui-avatars.com/api/?name={other_user.get('name', '')}&background=5288c1&color=fff",
+                        "status": "online"
+                    }
+        result.append(conv_data)
+    
+    return result
 
 @chat_router.post("/conversations")
 async def create_conversation(data: ConversationCreate):
