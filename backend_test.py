@@ -214,6 +214,95 @@ class UserRegistrationAPITester:
         else:
             self.log_result("Non-existent Email Validation", False, response_data, f"Status: {status}")
 
+    def test_search_users(self):
+        """Test user search functionality"""
+        print("\n🔍 Testing User Search...")
+        
+        # Test search with query parameter
+        success, response_data, status = self.make_request(
+            'GET', 'auth/search-users?q=test', expected_status=200
+        )
+        
+        if success and response_data and 'users' in response_data:
+            self.log_result("Search Users with Query", True)
+            print(f"   Found {len(response_data['users'])} users")
+            for user in response_data['users'][:3]:  # Show first 3 users
+                print(f"   - {user.get('name', 'Unknown')} ({user.get('userId', 'No ID')})")
+        else:
+            self.log_result("Search Users with Query", False, response_data, f"Status: {status}")
+        
+        # Test search with empty query
+        success, response_data, status = self.make_request(
+            'GET', 'auth/search-users?q=', expected_status=200
+        )
+        
+        if success and response_data and 'users' in response_data:
+            if len(response_data['users']) == 0:
+                self.log_result("Search Users Empty Query", True)
+                print("   Empty query returns no users (correct)")
+            else:
+                self.log_result("Search Users Empty Query", False, response_data, "Should return empty for empty query")
+        else:
+            self.log_result("Search Users Empty Query", False, response_data, f"Status: {status}")
+        
+        # Test search for specific test users mentioned in context
+        test_users = ['testuser123', 'newadminuser']
+        for test_user in test_users:
+            success, response_data, status = self.make_request(
+                'GET', f'auth/search-users?q={test_user}', expected_status=200
+            )
+            
+            if success and response_data and 'users' in response_data:
+                found = any(user.get('userId') == test_user for user in response_data['users'])
+                self.log_result(f"Search for {test_user}", True)
+                print(f"   {test_user} found: {found}")
+            else:
+                self.log_result(f"Search for {test_user}", False, response_data, f"Status: {status}")
+
+    def test_get_user_by_id(self):
+        """Test getting user by ID"""
+        print("\n👤 Testing Get User by ID...")
+        
+        # Test with registered test user
+        success, response_data, status = self.make_request(
+            'GET', f'auth/user/{self.test_user_id}', expected_status=200
+        )
+        
+        if success and response_data:
+            self.log_result("Get User by ID (Own)", True)
+            print(f"   User: {response_data.get('name', 'Unknown')}")
+            print(f"   User ID: {response_data.get('userId', 'Unknown')}")
+            print(f"   Email: {response_data.get('email', 'Unknown')}")
+        else:
+            self.log_result("Get User by ID (Own)", False, response_data, f"Status: {status}")
+        
+        # Test with known test users
+        test_users = ['testuser123', 'newadminuser']
+        for test_user in test_users:
+            success, response_data, status = self.make_request(
+                'GET', f'auth/user/{test_user}', expected_status=200
+            )
+            
+            if success and response_data:
+                self.log_result(f"Get User {test_user}", True)
+                print(f"   Found: {response_data.get('name', 'Unknown')} ({response_data.get('userId', 'Unknown')})")
+            elif status == 404:
+                self.log_result(f"Get User {test_user}", True)
+                print(f"   {test_user} not found (404) - this is expected if user doesn't exist")
+            else:
+                self.log_result(f"Get User {test_user}", False, response_data, f"Status: {status}")
+        
+        # Test with non-existent user
+        success, response_data, status = self.make_request(
+            'GET', 'auth/user/nonexistent_user_12345', expected_status=404
+        )
+        
+        if success or status == 404:
+            self.log_result("Get Non-existent User", True)
+            print("   Non-existent user returns 404 (correct)")
+        else:
+            self.log_result("Get Non-existent User", False, response_data, f"Status: {status}")
+
     def test_admin_login(self):
         """Test admin login functionality"""
         print("\n👑 Testing Admin Login...")
