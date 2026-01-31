@@ -1,0 +1,349 @@
+{
+  "metadata": {
+    "created_at": "2026-01-31T08:22:58.131727+00:00",
+    "type": "manual",
+    "version": "1.0"
+  },
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "name": "أحمد محمد",
+        "email": "ahmed@example.com",
+        "phone": "+966501234567",
+        "status": "active",
+        "rides": 45,
+        "orders": 23,
+        "joined": "2024-01-15",
+        "avatar": "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "2",
+        "name": "سارة أحمد",
+        "email": "sara@example.com",
+        "phone": "+966502345678",
+        "status": "active",
+        "rides": 32,
+        "orders": 56,
+        "joined": "2024-02-20",
+        "avatar": "https://images.unsplash.com/photo-1655249481446-25d575f1c054?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "3",
+        "name": "محمد علي",
+        "email": "mohamed@example.com",
+        "phone": "+966503456789",
+        "status": "inactive",
+        "rides": 12,
+        "orders": 8,
+        "joined": "2024-03-10",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "4",
+        "name": "فاطمة حسن",
+        "email": "fatima@example.com",
+        "phone": "+966504567890",
+        "status": "active",
+        "rides": 67,
+        "orders": 89,
+        "joined": "2023-12-05",
+        "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "5",
+        "name": "خالد العمري",
+        "email": "khaled@example.com",
+        "phone": "+966505678901",
+        "status": "blocked",
+        "rides": 5,
+        "orders": 2,
+        "joined": "2024-04-01",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"
+      }
+    ],
+    "drivers": [
+      {
+        "id": "1",
+        "name": "عبدالله السعيد",
+        "phone": "+966511234567",
+        "vehicle": "Toyota Camry 2023",
+        "plate": "أ ب ج 1234",
+        "status": "online",
+        "rating": 4.8,
+        "rides": 234,
+        "earnings": 15600,
+        "verified": true,
+        "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "2",
+        "name": "يوسف الحربي",
+        "phone": "+966512345678",
+        "vehicle": "Hyundai Sonata 2022",
+        "plate": "د هـ و 5678",
+        "status": "busy",
+        "rating": 4.6,
+        "rides": 178,
+        "earnings": 12300,
+        "verified": true,
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "3",
+        "name": "فهد المالكي",
+        "phone": "+966513456789",
+        "vehicle": "Kia K5 2024",
+        "plate": "ز ح ط 9012",
+        "status": "offline",
+        "rating": 4.9,
+        "rides": 456,
+        "earnings": 28900,
+        "verified": true,
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "4",
+        "name": "سعد القحطاني",
+        "phone": "+966514567890",
+        "vehicle": "Nissan Altima 2023",
+        "plate": "ي ك ل 3456",
+        "status": "online",
+        "rating": 4.4,
+        "rides": 89,
+        "earnings": 6200,
+        "verified": false,
+        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop"
+      },
+      {
+        "id": "5",
+        "name": "ماجد الغامدي",
+        "phone": "+966515678901",
+        "vehicle": "Honda Accord 2022",
+        "plate": "م ن س 7890",
+        "status": "online",
+        "rating": 4.7,
+        "rides": 312,
+        "earnings": 21400,
+        "verified": true,
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"
+      }
+    ],
+    "restaurants": [
+      {
+        "id": "1",
+        "name": "مطعم البيت",
+        "category": "عربي",
+        "rating": 4.7,
+        "orders": 1234,
+        "status": "open",
+        "commission": 15,
+        "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&h=150&fit=crop"
+      },
+      {
+        "id": "2",
+        "name": "برجر كينج",
+        "category": "وجبات سريعة",
+        "rating": 4.3,
+        "orders": 2567,
+        "status": "open",
+        "commission": 18,
+        "image": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=200&h=150&fit=crop"
+      },
+      {
+        "id": "3",
+        "name": "بيتزا هت",
+        "category": "إيطالي",
+        "rating": 4.5,
+        "orders": 1890,
+        "status": "closed",
+        "commission": 16,
+        "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&h=150&fit=crop"
+      },
+      {
+        "id": "4",
+        "name": "سوشي تايم",
+        "category": "ياباني",
+        "rating": 4.8,
+        "orders": 876,
+        "status": "open",
+        "commission": 20,
+        "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=200&h=150&fit=crop"
+      },
+      {
+        "id": "5",
+        "name": "شاورما الريف",
+        "category": "عربي",
+        "rating": 4.6,
+        "orders": 3421,
+        "status": "open",
+        "commission": 12,
+        "image": "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=200&h=150&fit=crop"
+      }
+    ],
+    "rides": [
+      {
+        "id": "R001",
+        "user": "أحمد محمد",
+        "driver": "عبدالله السعيد",
+        "from_location": "حي الملز، الرياض",
+        "to_location": "مطار الملك خالد",
+        "status": "completed",
+        "fare": 85,
+        "date": "2024-12-15 14:30",
+        "duration": "35 دقيقة"
+      },
+      {
+        "id": "R002",
+        "user": "سارة أحمد",
+        "driver": "يوسف الحربي",
+        "from_location": "حي السليمانية",
+        "to_location": "جامعة الملك سعود",
+        "status": "in_progress",
+        "fare": 45,
+        "date": "2024-12-15 15:00",
+        "duration": "20 دقيقة"
+      },
+      {
+        "id": "R003",
+        "user": "فاطمة حسن",
+        "driver": "فهد المالكي",
+        "from_location": "حي النرجس",
+        "to_location": "مول الرياض جاليري",
+        "status": "pending",
+        "fare": 55,
+        "date": "2024-12-15 15:15",
+        "duration": "25 دقيقة"
+      },
+      {
+        "id": "R004",
+        "user": "محمد علي",
+        "driver": "سعد القحطاني",
+        "from_location": "حي الياسمين",
+        "to_location": "مستشفى الملك فيصل",
+        "status": "cancelled",
+        "fare": 0,
+        "date": "2024-12-15 13:45",
+        "duration": "-"
+      },
+      {
+        "id": "R005",
+        "user": "خالد العمري",
+        "driver": "ماجد الغامدي",
+        "from_location": "حي الورود",
+        "to_location": "حي العليا",
+        "status": "completed",
+        "fare": 35,
+        "date": "2024-12-15 12:00",
+        "duration": "15 دقيقة"
+      }
+    ],
+    "orders": [
+      {
+        "id": "O001",
+        "user": "أحمد محمد",
+        "restaurant": "مطعم البيت",
+        "items": 3,
+        "total": 125,
+        "status": "delivered",
+        "date": "2024-12-15 13:00",
+        "driver": "عبدالله السعيد"
+      },
+      {
+        "id": "O002",
+        "user": "سارة أحمد",
+        "restaurant": "برجر كينج",
+        "items": 5,
+        "total": 89,
+        "status": "preparing",
+        "date": "2024-12-15 14:30",
+        "driver": "-"
+      },
+      {
+        "id": "O003",
+        "user": "فاطمة حسن",
+        "restaurant": "سوشي تايم",
+        "items": 2,
+        "total": 210,
+        "status": "on_way",
+        "date": "2024-12-15 14:45",
+        "driver": "يوسف الحربي"
+      },
+      {
+        "id": "O004",
+        "user": "محمد علي",
+        "restaurant": "شاورما الريف",
+        "items": 4,
+        "total": 65,
+        "status": "cancelled",
+        "date": "2024-12-15 12:15",
+        "driver": "-"
+      },
+      {
+        "id": "O005",
+        "user": "خالد العمري",
+        "restaurant": "بيتزا هت",
+        "items": 1,
+        "total": 75,
+        "status": "delivered",
+        "date": "2024-12-15 11:30",
+        "driver": "فهد المالكي"
+      }
+    ],
+    "promotions": [
+      {
+        "id": "P001",
+        "code": "WELCOME50",
+        "discount": 50,
+        "type": "percentage",
+        "maxUses": 1000,
+        "used": 456,
+        "status": "active",
+        "expires": "2025-01-31",
+        "service": "all"
+      },
+      {
+        "id": "P002",
+        "code": "RIDE25",
+        "discount": 25,
+        "type": "fixed",
+        "maxUses": 500,
+        "used": 123,
+        "status": "active",
+        "expires": "2025-02-15",
+        "service": "rides"
+      },
+      {
+        "id": "P003",
+        "code": "FOOD15",
+        "discount": 15,
+        "type": "percentage",
+        "maxUses": 2000,
+        "used": 1876,
+        "status": "active",
+        "expires": "2025-01-15",
+        "service": "delivery"
+      },
+      {
+        "id": "P004",
+        "code": "VIP100",
+        "discount": 100,
+        "type": "fixed",
+        "maxUses": 50,
+        "used": 50,
+        "status": "expired",
+        "expires": "2024-12-01",
+        "service": "all"
+      }
+    ],
+    "admins": [
+      {
+        "id": "cc7e9dfe-a8f1-45ff-9608-e6e56fcd734a",
+        "name": "مدير النظام",
+        "email": "admin@transfers.com",
+        "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+        "role": "super_admin"
+      }
+    ]
+  }
+}
