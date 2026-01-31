@@ -173,11 +173,6 @@ const LoginPage = () => {
           </button>
         </div>
       </Card>
-      
-      {/* Footer */}
-      <p className="text-slate-400 text-sm mt-8">
-        Made with <span className="text-blue-500 font-medium">émergent</span>
-      </p>
     </div>
   );
 };

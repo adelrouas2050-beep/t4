@@ -237,11 +237,8 @@ const LandingPage = () => {
             <Car className="w-6 h-6" />
             <span className="text-xl font-bold">{t('ترانسفيرز', 'TransVerse')}</span>
           </div>
-          <p className="text-slate-400 mb-4">
+          <p className="text-slate-400">
             {t('© 2025 ترانسفيرز. جميع الحقوق محفوظة.', '© 2025 TransVerse. All rights reserved.')}
-          </p>
-          <p className="text-slate-500 text-sm">
-            Made with <span className="text-blue-400 font-medium">émergent</span>
           </p>
         </div>
       </footer>

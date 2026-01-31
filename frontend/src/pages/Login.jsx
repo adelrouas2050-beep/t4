@@ -107,11 +107,6 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
-      
-      {/* Footer */}
-      <p className="text-zinc-500 text-sm mt-8">
-        Made with <span className="text-indigo-400 font-medium">émergent</span>
-      </p>
     </div>
   );
 }
