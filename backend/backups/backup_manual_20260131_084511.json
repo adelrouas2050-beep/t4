@@ -1,65 +1,32 @@
 {
   "metadata": {
-    "created_at": "2026-01-31T08:22:58.131727+00:00",
+    "created_at": "2026-01-31T08:45:11.736120+00:00",
     "type": "manual",
     "version": "1.0"
   },
   "data": {
     "users": [
       {
-        "id": "1",
-        "name": "أحمد محمد",
-        "email": "ahmed@example.com",
-        "phone": "+966501234567",
+        "id": "0bc0e8d1-48ca-43b0-ae67-c11fbd564f15",
+        "name": "حليمة",
+        "email": "halima@transfers.com",
+        "phone": "+213698400053",
         "status": "active",
-        "rides": 45,
-        "orders": 23,
-        "joined": "2024-01-15",
-        "avatar": "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?w=100&h=100&fit=crop"
+        "rides": 0,
+        "orders": 0,
+        "joined": "2026-01-31",
+        "avatar": "https://ui-avatars.com/api/?name=%D8%AD%D9%84%D9%8A%D9%85%D8%A9&background=6366f1&color=fff"
       },
       {
-        "id": "2",
-        "name": "سارة أحمد",
-        "email": "sara@example.com",
-        "phone": "+966502345678",
+        "id": "1dd87d3b-554d-4ad9-8418-db9a84ab62f8",
+        "name": "Adel",
+        "email": "adel@transfers.com",
+        "phone": "+213698400053",
         "status": "active",
-        "rides": 32,
-        "orders": 56,
-        "joined": "2024-02-20",
-        "avatar": "https://images.unsplash.com/photo-1655249481446-25d575f1c054?w=100&h=100&fit=crop"
-      },
-      {
-        "id": "3",
-        "name": "محمد علي",
-        "email": "mohamed@example.com",
-        "phone": "+966503456789",
-        "status": "inactive",
-        "rides": 12,
-        "orders": 8,
-        "joined": "2024-03-10",
-        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
-      },
-      {
-        "id": "4",
-        "name": "فاطمة حسن",
-        "email": "fatima@example.com",
-        "phone": "+966504567890",
-        "status": "active",
-        "rides": 67,
-        "orders": 89,
-        "joined": "2023-12-05",
-        "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
-      },
-      {
-        "id": "5",
-        "name": "خالد العمري",
-        "email": "khaled@example.com",
-        "phone": "+966505678901",
-        "status": "blocked",
-        "rides": 5,
-        "orders": 2,
-        "joined": "2024-04-01",
-        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"
+        "rides": 0,
+        "orders": 0,
+        "joined": "2026-01-31",
+        "avatar": "https://ui-avatars.com/api/?name=Adel%20&background=6366f1&color=fff"
       }
     ],
     "drivers": [
