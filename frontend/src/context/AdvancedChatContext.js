@@ -64,8 +64,38 @@ export const AdvancedChatProvider = ({ children }) => {
     }
   }, [isTestAccount, user]);
 
-  const searchUserById = (userId) => {
-    return mockUsers.find(user => user.userId === userId);
+  const searchUserById = async (userId) => {
+    // أولاً البحث في mock users للتوافق مع البيانات الموجودة
+    const mockUser = mockUsers.find(user => user.userId === userId || user.userId?.toUpperCase() === userId?.toUpperCase());
+    if (mockUser) return mockUser;
+    
+    // البحث في قاعدة البيانات
+    try {
+      const response = await fetch(`${API_URL}/api/auth/user/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        return userData;
+      }
+    } catch (error) {
+      console.error('Error searching user:', error);
+    }
+    return null;
+  };
+
+  // دالة جديدة للبحث عن المستخدمين
+  const searchUsers = async (query) => {
+    if (!query || query.length < 2) return [];
+    
+    try {
+      const response = await fetch(`${API_URL}/api/auth/search-users?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.users || [];
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+    return [];
   };
 
   const getOrCreateConversation = (otherUserId) => {
