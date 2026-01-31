@@ -82,6 +82,48 @@ code {
     }
 }
 
+/* Light Theme Styles */
+.light-theme {
+    --background: 245 245 245;
+    --foreground: 30 30 30;
+}
+
+.light-theme .bg-\[\#0e1621\] {
+    background-color: #f5f5f5 !important;
+}
+
+.light-theme .bg-\[\#17212b\] {
+    background-color: #ffffff !important;
+}
+
+.light-theme .bg-\[\#232e3c\] {
+    background-color: #e5e7eb !important;
+}
+
+.light-theme .bg-\[\#242f3d\] {
+    background-color: #f3f4f6 !important;
+}
+
+.light-theme .text-white {
+    color: #1f2937 !important;
+}
+
+.light-theme .text-\[\#8b9eb0\] {
+    color: #6b7280 !important;
+}
+
+.light-theme .text-\[\#6c7883\] {
+    color: #9ca3af !important;
+}
+
+.light-theme .border-\[\#232e3c\] {
+    border-color: #e5e7eb !important;
+}
+
+.light-theme .hover\:bg-\[\#232e3c\]:hover {
+    background-color: #f3f4f6 !important;
+}
+
 @layer base {
     [data-debug-wrapper="true"] {
         display: contents !important;
