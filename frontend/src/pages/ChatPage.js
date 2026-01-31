@@ -23,7 +23,7 @@ import {
 } from '../components/ui/dropdown-menu';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useChat } from '../context/ChatContext';
+import { useAdvancedChat } from '../context/AdvancedChatContext';
 import { 
   ArrowLeft, Send, Search, MessageCircle, User, 
   Menu, Clock, Check, CheckCheck,
@@ -32,7 +32,8 @@ import {
   Paperclip, Smile, Mic, X, Phone, Video,
   BellOff, Settings, Moon, Archive, Bookmark,
   Home, Bell, Palette, UserX, Users, ChevronLeft,
-  PinOff, Volume2, VolumeX, ImageOff, Forward, Square, CheckSquare
+  PinOff, Volume2, VolumeX, ImageOff, Forward, Square, CheckSquare,
+  Radio, Plus, Megaphone, UsersRound, MessageSquare, Hash
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
@@ -49,8 +50,16 @@ const ChatPage = () => {
     getOrCreateConversation,
     sendMessage,
     markAsRead,
-    getTotalUnreadCount
-  } = useChat();
+    getTotalUnreadCount,
+    getFilteredConversations,
+    folders,
+    activeFolder,
+    setActiveFolder,
+    togglePin,
+    toggleMute,
+    archiveConversation,
+    deleteConversation
+  } = useAdvancedChat();
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,20 +75,24 @@ const ChatPage = () => {
   const [showSearchInChat, setShowSearchInChat] = useState(false);
   const [clearHistoryDialog, setClearHistoryDialog] = useState(false);
   const [deleteConversationDialog, setDeleteConversationDialog] = useState(false);
-  const [pinnedConversations, setPinnedConversations] = useState([]);
-  const [mutedConversations, setMutedConversations] = useState([]);
-  const [archivedConversations, setArchivedConversations] = useState([]);
   const [chatBackground, setChatBackground] = useState('default');
-  // New states for selection mode
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState([]);
-  const [longPressedConv, setLongPressedConv] = useState(null);
   const [convActionMenu, setConvActionMenu] = useState({ show: false, x: 0, y: 0, convId: null });
+  const [showNewMenu, setShowNewMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const longPressTimer = useRef(null);
   const MAX_PINNED = 5;
+
+  // Tab definitions for Telegram-like navigation
+  const tabs = [
+    { id: 'All', label: t('الكل', 'All'), icon: MessageCircle },
+    { id: 'Personal', label: t('شخصي', 'Personal'), icon: User },
+    { id: 'Groups', label: t('مجموعات', 'Groups'), icon: UsersRound },
+    { id: 'Channels', label: t('قنوات', 'Channels'), icon: Megaphone },
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -93,7 +106,6 @@ const ChatPage = () => {
     if (activeConversation) {
       markAsRead(activeConversation.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation?.id]);
 
   useEffect(() => {
@@ -145,7 +157,12 @@ const ChatPage = () => {
       });
       setEditingMessage(null);
     } else {
-      sendMessage(activeConversation.id, messageText, messageText, replyingTo);
+      sendMessage(activeConversation.id, {
+        type: 'text',
+        text: messageText,
+        textEn: messageText,
+        replyTo: replyingTo
+      });
     }
     
     setMessageText('');
@@ -215,70 +232,34 @@ const ChatPage = () => {
     });
   };
 
-  // Pin/Unpin conversation with max limit
   const handlePinConversation = (convId) => {
-    if (pinnedConversations.includes(convId)) {
-      setPinnedConversations(prev => prev.filter(id => id !== convId));
-      toast({
-        title: t('تم إلغاء التثبيت', 'Unpinned'),
-        description: t('تم إلغاء تثبيت المحادثة', 'Conversation unpinned')
-      });
-    } else {
-      if (pinnedConversations.length >= MAX_PINNED) {
-        toast({
-          title: t('حد التثبيت', 'Pin Limit'),
-          description: t(`لا يمكن تثبيت أكثر من ${MAX_PINNED} محادثات`, `Cannot pin more than ${MAX_PINNED} conversations`),
-          variant: 'destructive'
-        });
-        return;
-      }
-      setPinnedConversations(prev => [...prev, convId]);
-      toast({
-        title: t('تم التثبيت', 'Pinned'),
-        description: t('تم تثبيت المحادثة في الأعلى', 'Conversation pinned to top')
-      });
-    }
+    togglePin(convId);
+    toast({
+      title: t('تم التحديث', 'Updated'),
+      description: t('تم تحديث حالة التثبيت', 'Pin status updated')
+    });
     setConvActionMenu({ show: false, x: 0, y: 0, convId: null });
   };
 
-  // Mute/Unmute conversation
   const handleMuteConversation = (convId) => {
-    if (mutedConversations.includes(convId)) {
-      setMutedConversations(prev => prev.filter(id => id !== convId));
-      toast({
-        title: t('تم تشغيل الإشعارات', 'Unmuted'),
-        description: t('سيتم إشعارك بالرسائل الجديدة', 'You will receive notifications')
-      });
-    } else {
-      setMutedConversations(prev => [...prev, convId]);
-      toast({
-        title: t('تم كتم الإشعارات', 'Muted'),
-        description: t('لن تتلقى إشعارات من هذه المحادثة', 'Notifications muted')
-      });
-    }
+    toggleMute(convId);
+    toast({
+      title: t('تم التحديث', 'Updated'),
+      description: t('تم تحديث حالة الإشعارات', 'Notification status updated')
+    });
     setConvActionMenu({ show: false, x: 0, y: 0, convId: null });
   };
 
-  // Archive conversation
   const handleArchiveConversation = (convId) => {
-    if (archivedConversations.includes(convId)) {
-      setArchivedConversations(prev => prev.filter(id => id !== convId));
-      toast({
-        title: t('تم إلغاء الأرشفة', 'Unarchived'),
-        description: t('تم إعادة المحادثة للقائمة الرئيسية', 'Conversation restored')
-      });
-    } else {
-      setArchivedConversations(prev => [...prev, convId]);
-      setActiveConversation(null);
-      toast({
-        title: t('تم الأرشفة', 'Archived'),
-        description: t('تم نقل المحادثة للأرشيف', 'Conversation archived')
-      });
-    }
+    archiveConversation(convId);
+    setActiveConversation(null);
+    toast({
+      title: t('تم الأرشفة', 'Archived'),
+      description: t('تم نقل المحادثة للأرشيف', 'Conversation archived')
+    });
     setConvActionMenu({ show: false, x: 0, y: 0, convId: null });
   };
 
-  // Long press handlers for conversation
   const handleConvLongPress = (e, convId) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -308,7 +289,6 @@ const ChatPage = () => {
     }
   };
 
-  // Message selection handlers
   const handleMessageLongPress = (msgId) => {
     setSelectionMode(true);
     setSelectedMessages([msgId]);
@@ -338,47 +318,30 @@ const ChatPage = () => {
     setSelectedMessages([]);
   };
 
-  const handleForwardSelectedMessages = () => {
-    toast({
-      title: t('قريباً', 'Coming Soon'),
-      description: t('ميزة إعادة التوجيه قريباً', 'Forward feature coming soon')
-    });
-  };
-
-  // Clear history
   const handleClearHistory = (deleteForBoth) => {
-    if (deleteForBoth) {
-      toast({
-        title: t('تم مسح السجل', 'History Cleared'),
-        description: t('تم مسح سجل المحادثة من الطرفين', 'Chat history cleared for both sides')
-      });
-    } else {
-      toast({
-        title: t('تم مسح السجل', 'History Cleared'),
-        description: t('تم مسح سجل المحادثة من طرفك فقط', 'Chat history cleared from your side only')
-      });
-    }
+    toast({
+      title: t('تم مسح السجل', 'History Cleared'),
+      description: deleteForBoth 
+        ? t('تم مسح سجل المحادثة من الطرفين', 'Chat history cleared for both sides')
+        : t('تم مسح سجل المحادثة من طرفك فقط', 'Chat history cleared from your side only')
+    });
     setClearHistoryDialog(false);
   };
 
-  // Delete conversation
   const handleDeleteConversation = (deleteForBoth) => {
-    if (deleteForBoth) {
-      toast({
-        title: t('تم الحذف', 'Deleted'),
-        description: t('تم حذف المحادثة من الطرفين', 'Conversation deleted for both sides')
-      });
-    } else {
-      toast({
-        title: t('تم الحذف', 'Deleted'),
-        description: t('تم حذف المحادثة من طرفك فقط', 'Conversation deleted from your side only')
-      });
+    if (activeConversation) {
+      deleteConversation(activeConversation.id);
     }
+    toast({
+      title: t('تم الحذف', 'Deleted'),
+      description: deleteForBoth 
+        ? t('تم حذف المحادثة من الطرفين', 'Conversation deleted for both sides')
+        : t('تم حذف المحادثة من طرفك فقط', 'Conversation deleted from your side only')
+    });
     setDeleteConversationDialog(false);
     setActiveConversation(null);
   };
 
-  // Change chat background
   const handleChangeBackground = (bg) => {
     setChatBackground(bg);
     toast({
@@ -387,7 +350,6 @@ const ChatPage = () => {
     });
   };
 
-  // Get background style
   const getBackgroundStyle = () => {
     switch(chatBackground) {
       case 'pattern1':
@@ -427,35 +389,52 @@ const ChatPage = () => {
     return date.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US');
   };
 
+  // Get conversation name and photo based on type
+  const getConversationInfo = (conv) => {
+    if (conv.type === 'private') {
+      return {
+        name: language === 'ar' ? conv.otherUser?.name : conv.otherUser?.nameEn,
+        photo: conv.otherUser?.photo,
+        status: conv.otherUser?.status,
+        icon: null,
+        memberCount: null
+      };
+    } else if (conv.type === 'group') {
+      return {
+        name: language === 'ar' ? conv.group?.name : conv.group?.nameEn,
+        photo: conv.group?.photo,
+        status: null,
+        icon: UsersRound,
+        memberCount: conv.group?.memberCount
+      };
+    } else if (conv.type === 'channel') {
+      return {
+        name: language === 'ar' ? conv.channel?.name : conv.channel?.nameEn,
+        photo: conv.channel?.photo,
+        status: null,
+        icon: Megaphone,
+        memberCount: conv.channel?.memberCount,
+        isVerified: conv.channel?.isVerified
+      };
+    }
+    return { name: '', photo: '', status: null, icon: null };
+  };
+
   const currentMessages = activeConversation ? (messages[activeConversation.id] || []) : [];
   const unreadCount = getTotalUnreadCount();
 
   const filteredMessages = currentMessages.filter(msg => {
     if (!searchInChat) return true;
     const text = language === 'ar' ? msg.text : msg.textEn;
-    return text.toLowerCase().includes(searchInChat.toLowerCase());
+    return text?.toLowerCase().includes(searchInChat.toLowerCase());
   });
 
-  // Filter and sort conversations (pinned first, then archived filtered out, then by last message)
-  const filteredConversations = conversations
-    .filter(conv => {
-      // Filter out archived unless in archive view
-      if (archivedConversations.includes(conv.id)) return false;
-      if (!sidebarSearch) return true;
-      const name = language === 'ar' ? conv.otherUser.name : conv.otherUser.nameEn;
-      return name.toLowerCase().includes(sidebarSearch.toLowerCase());
-    })
-    .sort((a, b) => {
-      // Pinned conversations first
-      const aPinned = pinnedConversations.includes(a.id);
-      const bPinned = pinnedConversations.includes(b.id);
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
-      // Then by last message time
-      const aTime = a.lastMessage?.timestamp || 0;
-      const bTime = b.lastMessage?.timestamp || 0;
-      return new Date(bTime) - new Date(aTime);
-    });
+  // Get filtered conversations based on active tab and search
+  const filteredConversations = getFilteredConversations().filter(conv => {
+    if (!sidebarSearch) return true;
+    const info = getConversationInfo(conv);
+    return info.name?.toLowerCase().includes(sidebarSearch.toLowerCase());
+  });
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[#17212b] overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -465,34 +444,52 @@ const ChatPage = () => {
         <div className="h-[56px] px-3 flex items-center justify-between bg-[#17212b] border-b border-[#232e3c]">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0">
+              <Button variant="ghost" size="sm" className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0" data-testid="menu-btn">
                 <Menu className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56 bg-[#17212b] border-[#232e3c] text-white">
-              <DropdownMenuItem onClick={() => navigate('/rider')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/rider')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-home">
                 <Home className="w-5 h-5" />
                 {t('الصفحة الرئيسية', 'Home Page')}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#232e3c]" />
-              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              
+              {/* New Group */}
+              <DropdownMenuItem onClick={() => navigate('/create-group')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-new-group">
+                <UsersRound className="w-5 h-5" />
+                {t('مجموعة جديدة', 'New Group')}
+              </DropdownMenuItem>
+              
+              {/* New Channel */}
+              <DropdownMenuItem onClick={() => navigate('/create-channel')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-new-channel">
+                <Megaphone className="w-5 h-5" />
+                {t('قناة جديدة', 'New Channel')}
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-[#232e3c]" />
+              
+              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-saved">
                 <Bookmark className="w-5 h-5" />
                 {t('الرسائل المحفوظة', 'Saved Messages')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-archived">
                 <Archive className="w-5 h-5" />
                 {t('الأرشيف', 'Archived')}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#232e3c]" />
-              <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-profile">
                 <User className="w-5 h-5" />
                 {t('الملف الشخصي', 'Profile')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              
+              {/* Settings - Navigate to Settings Page */}
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-settings">
                 <Settings className="w-5 h-5" />
                 {t('الإعدادات', 'Settings')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer">
+              
+              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-night-mode">
                 <Moon className="w-5 h-5" />
                 {t('الوضع الليلي', 'Night Mode')}
               </DropdownMenuItem>
@@ -507,9 +504,34 @@ const ChatPage = () => {
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 className="h-[36px] pr-10 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883] rounded-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                data-testid="search-input"
               />
             </div>
           </div>
+        </div>
+
+        {/* Tabs - Telegram Style */}
+        <div className="flex items-center bg-[#17212b] border-b border-[#232e3c] overflow-x-auto hide-scrollbar">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveFolder(tab.id)}
+              className={`flex-1 min-w-[70px] py-3 px-2 text-center transition-all duration-200 relative ${
+                activeFolder === tab.id 
+                  ? 'text-[#5288c1]' 
+                  : 'text-[#8b9eb0] hover:text-white'
+              }`}
+              data-testid={`tab-${tab.id.toLowerCase()}`}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <tab.icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{tab.label}</span>
+              </div>
+              {activeFolder === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#5288c1] rounded-t-full" />
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Conversations List */}
@@ -520,92 +542,205 @@ const ChatPage = () => {
                 <MessageCircle className="w-10 h-10 text-[#5288c1]" />
               </div>
               <p className="text-[#8b9eb0] text-sm mb-2">
-                {t('لا توجد محادثات', 'No conversations')}
+                {activeFolder === 'Groups' 
+                  ? t('لا توجد مجموعات', 'No groups')
+                  : activeFolder === 'Channels'
+                  ? t('لا توجد قنوات', 'No channels')
+                  : t('لا توجد محادثات', 'No conversations')}
               </p>
               <Button
-                onClick={() => setSearchDialogOpen(true)}
+                onClick={() => {
+                  if (activeFolder === 'Groups') {
+                    navigate('/create-group');
+                  } else if (activeFolder === 'Channels') {
+                    navigate('/create-channel');
+                  } else {
+                    setSearchDialogOpen(true);
+                  }
+                }}
                 className="mt-4 bg-[#5288c1] hover:bg-[#4a7ab0] text-white"
+                data-testid="start-chat-btn"
               >
-                <UserPlus className="w-4 h-4 ml-2" />
-                {t('بدء محادثة', 'Start Chat')}
+                {activeFolder === 'Groups' ? (
+                  <>
+                    <UsersRound className="w-4 h-4 ml-2" />
+                    {t('إنشاء مجموعة', 'Create Group')}
+                  </>
+                ) : activeFolder === 'Channels' ? (
+                  <>
+                    <Megaphone className="w-4 h-4 ml-2" />
+                    {t('إنشاء قناة', 'Create Channel')}
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 ml-2" />
+                    {t('بدء محادثة', 'Start Chat')}
+                  </>
+                )}
               </Button>
             </div>
           ) : (
-            filteredConversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => !convActionMenu.show && setActiveConversation(conv)}
-                onContextMenu={(e) => handleConvLongPress(e, conv.id)}
-                onTouchStart={(e) => handleConvTouchStart(e, conv.id)}
-                onTouchEnd={handleConvTouchEnd}
-                onTouchMove={handleConvTouchEnd}
-                className={`px-3 py-2 cursor-pointer transition-all duration-150 relative ${
-                  activeConversation?.id === conv.id 
-                    ? 'bg-[#2b5278]' 
-                    : 'hover:bg-[#202b36]'
-                } ${convActionMenu.convId === conv.id ? 'bg-[#202b36]' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="w-[54px] h-[54px]">
-                      <AvatarImage src={conv.otherUser.photo} />
-                      <AvatarFallback className="bg-gradient-to-br from-[#5288c1] to-[#7a5fca] text-white text-lg font-medium">
-                        {conv.otherUser.name?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {conv.otherUser.status === 'online' && (
-                      <div className="absolute bottom-0 right-0 w-[14px] h-[14px] bg-[#4dcd5e] border-[3px] border-[#17212b] rounded-full" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-[2px]">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-[15px] text-white truncate">
-                          {language === 'ar' ? conv.otherUser.name : conv.otherUser.nameEn}
-                        </h3>
-                        {mutedConversations.includes(conv.id) && (
-                          <VolumeX className="w-4 h-4 text-[#6c7883]" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {pinnedConversations.includes(conv.id) && (
-                          <Pin className="w-4 h-4 text-[#6c7883]" />
-                        )}
-                        {conv.lastMessage && (
-                          <>
-                            {conv.lastMessage.senderId === 'user1' && (
-                              <CheckCheck className={`w-[18px] h-[18px] ${conv.lastMessage.read ? 'text-[#4dcd5e]' : 'text-[#6c7883]'}`} />
-                            )}
-                            <span className="text-[12px] text-[#6c7883]">
-                              {formatTime(conv.lastMessage.timestamp)}
-                            </span>
-                          </>
-                        )}
-                      </div>
+            filteredConversations.map((conv) => {
+              const convInfo = getConversationInfo(conv);
+              const isPinned = conv.pinned;
+              const isMuted = conv.muted;
+              
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => !convActionMenu.show && setActiveConversation(conv)}
+                  onContextMenu={(e) => handleConvLongPress(e, conv.id)}
+                  onTouchStart={(e) => handleConvTouchStart(e, conv.id)}
+                  onTouchEnd={handleConvTouchEnd}
+                  onTouchMove={handleConvTouchEnd}
+                  className={`px-3 py-2 cursor-pointer transition-all duration-150 relative ${
+                    activeConversation?.id === conv.id 
+                      ? 'bg-[#2b5278]' 
+                      : 'hover:bg-[#202b36]'
+                  } ${convActionMenu.convId === conv.id ? 'bg-[#202b36]' : ''}`}
+                  data-testid={`conversation-${conv.id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Avatar className="w-[54px] h-[54px]">
+                        <AvatarImage src={convInfo.photo} />
+                        <AvatarFallback className={`text-white text-lg font-medium ${
+                          conv.type === 'channel' 
+                            ? 'bg-gradient-to-br from-[#7a5fca] to-[#5288c1]'
+                            : conv.type === 'group'
+                            ? 'bg-gradient-to-br from-[#10b981] to-[#059669]'
+                            : 'bg-gradient-to-br from-[#5288c1] to-[#7a5fca]'
+                        }`}>
+                          {conv.type === 'channel' ? (
+                            <Megaphone className="w-6 h-6" />
+                          ) : conv.type === 'group' ? (
+                            <UsersRound className="w-6 h-6" />
+                          ) : (
+                            convInfo.name?.charAt(0)
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      {conv.type === 'private' && convInfo.status === 'online' && (
+                        <div className="absolute bottom-0 right-0 w-[14px] h-[14px] bg-[#4dcd5e] border-[3px] border-[#17212b] rounded-full" />
+                      )}
+                      {convInfo.isVerified && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#5288c1] rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[14px] text-[#8b9eb0] truncate flex-1 leading-[20px]">
-                        {conv.lastMessage 
-                          ? (language === 'ar' ? conv.lastMessage.text : conv.lastMessage.textEn)
-                          : t('ابدأ المحادثة', 'Start conversation')
-                        }
-                      </p>
-                      {conv.unreadCount > 0 && !mutedConversations.includes(conv.id) && (
-                        <Badge className="bg-[#5288c1] hover:bg-[#5288c1] text-white text-[12px] min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-[6px] font-medium mr-1">
-                          {conv.unreadCount}
-                        </Badge>
-                      )}
-                      {conv.unreadCount > 0 && mutedConversations.includes(conv.id) && (
-                        <Badge className="bg-[#3d4d5c] hover:bg-[#3d4d5c] text-white text-[12px] min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-[6px] font-medium mr-1">
-                          {conv.unreadCount}
-                        </Badge>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-[2px]">
+                        <div className="flex items-center gap-2">
+                          {/* Type Icon for Groups/Channels */}
+                          {convInfo.icon && (
+                            <convInfo.icon className="w-4 h-4 text-[#5288c1]" />
+                          )}
+                          <h3 className="font-semibold text-[15px] text-white truncate">
+                            {convInfo.name}
+                          </h3>
+                          {isMuted && (
+                            <VolumeX className="w-4 h-4 text-[#6c7883]" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {isPinned && (
+                            <Pin className="w-4 h-4 text-[#6c7883]" />
+                          )}
+                          {conv.lastMessage && (
+                            <>
+                              {conv.lastMessage.senderId === 'user1' && conv.type === 'private' && (
+                                <CheckCheck className={`w-[18px] h-[18px] ${conv.lastMessage.read ? 'text-[#4dcd5e]' : 'text-[#6c7883]'}`} />
+                              )}
+                              <span className="text-[12px] text-[#6c7883]">
+                                {formatTime(conv.lastMessage.timestamp)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 flex items-center gap-1">
+                          {/* Show sender name for groups */}
+                          {conv.type === 'group' && conv.lastMessage?.senderName && (
+                            <span className="text-[#5288c1] text-[14px]">
+                              {conv.lastMessage.senderName.split(' ')[0]}:
+                            </span>
+                          )}
+                          <p className="text-[14px] text-[#8b9eb0] truncate flex-1 leading-[20px]">
+                            {conv.lastMessage 
+                              ? (language === 'ar' ? conv.lastMessage.text : conv.lastMessage.textEn)
+                              : t('ابدأ المحادثة', 'Start conversation')
+                            }
+                          </p>
+                        </div>
+                        {/* Member count for groups/channels */}
+                        {convInfo.memberCount && !conv.unreadCount && (
+                          <span className="text-[11px] text-[#6c7883] mr-1">
+                            {convInfo.memberCount.toLocaleString()} {conv.type === 'channel' ? t('مشترك', 'subscribers') : t('عضو', 'members')}
+                          </span>
+                        )}
+                        {conv.unreadCount > 0 && !isMuted && (
+                          <Badge className="bg-[#5288c1] hover:bg-[#5288c1] text-white text-[12px] min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-[6px] font-medium mr-1">
+                            {conv.unreadCount}
+                          </Badge>
+                        )}
+                        {conv.unreadCount > 0 && isMuted && (
+                          <Badge className="bg-[#3d4d5c] hover:bg-[#3d4d5c] text-white text-[12px] min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-[6px] font-medium mr-1">
+                            {conv.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
+        </div>
+
+        {/* Floating Action Button */}
+        <div className="absolute bottom-6 left-6 md:relative md:bottom-auto md:left-auto md:p-4">
+          <DropdownMenu open={showNewMenu} onOpenChange={setShowNewMenu}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="w-14 h-14 rounded-full bg-[#5288c1] hover:bg-[#4a7ab0] shadow-lg md:w-full md:h-12 md:rounded-lg"
+                data-testid="fab-new"
+              >
+                <Plus className="w-6 h-6 md:hidden" />
+                <span className="hidden md:flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  {t('جديد', 'New')}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-[#17212b] border-[#232e3c] text-white mb-2">
+              <DropdownMenuItem 
+                onClick={() => { setShowNewMenu(false); setSearchDialogOpen(true); }}
+                className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
+                data-testid="new-chat"
+              >
+                <MessageSquare className="w-5 h-5" />
+                {t('محادثة جديدة', 'New Chat')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => { setShowNewMenu(false); navigate('/create-group'); }}
+                className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
+                data-testid="new-group"
+              >
+                <UsersRound className="w-5 h-5" />
+                {t('مجموعة جديدة', 'New Group')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => { setShowNewMenu(false); navigate('/create-channel'); }}
+                className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
+                data-testid="new-channel"
+              >
+                <Megaphone className="w-5 h-5" />
+                {t('قناة جديدة', 'New Channel')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -624,51 +759,87 @@ const ChatPage = () => {
                     setShowSidebar(true);
                   }}
                   className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0 md:hidden"
+                  data-testid="back-btn"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <Avatar className="w-[42px] h-[42px]">
-                  <AvatarImage src={activeConversation.otherUser.photo} />
-                  <AvatarFallback className="bg-gradient-to-br from-[#5288c1] to-[#7a5fca] text-white">
-                    {activeConversation.otherUser.name?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold text-[15px] text-white leading-tight">
-                    {language === 'ar' 
-                      ? activeConversation.otherUser.name 
-                      : activeConversation.otherUser.nameEn
-                    }
-                  </h2>
-                  <p className="text-[13px] text-[#8b9eb0] leading-tight">
-                    {isTyping ? (
-                      <span className="text-[#5288c1]">{t('يكتب...', 'typing...')}</span>
-                    ) : activeConversation.otherUser.status === 'online' 
-                      ? <span className="text-[#4dcd5e]">{t('متصل', 'online')}</span>
-                      : t('آخر ظهور منذ قليل', 'last seen recently')
-                    }
-                  </p>
-                </div>
+                {(() => {
+                  const info = getConversationInfo(activeConversation);
+                  return (
+                    <>
+                      <Avatar className="w-[42px] h-[42px]">
+                        <AvatarImage src={info.photo} />
+                        <AvatarFallback className={`text-white ${
+                          activeConversation.type === 'channel' 
+                            ? 'bg-gradient-to-br from-[#7a5fca] to-[#5288c1]'
+                            : activeConversation.type === 'group'
+                            ? 'bg-gradient-to-br from-[#10b981] to-[#059669]'
+                            : 'bg-gradient-to-br from-[#5288c1] to-[#7a5fca]'
+                        }`}>
+                          {activeConversation.type === 'channel' ? (
+                            <Megaphone className="w-5 h-5" />
+                          ) : activeConversation.type === 'group' ? (
+                            <UsersRound className="w-5 h-5" />
+                          ) : (
+                            info.name?.charAt(0)
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold text-[15px] text-white leading-tight">
+                            {info.name}
+                          </h2>
+                          {info.isVerified && (
+                            <div className="w-4 h-4 bg-[#5288c1] rounded-full flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[13px] text-[#8b9eb0] leading-tight">
+                          {activeConversation.type === 'private' ? (
+                            isTyping ? (
+                              <span className="text-[#5288c1]">{t('يكتب...', 'typing...')}</span>
+                            ) : info.status === 'online' 
+                              ? <span className="text-[#4dcd5e]">{t('متصل', 'online')}</span>
+                              : t('آخر ظهور منذ قليل', 'last seen recently')
+                          ) : (
+                            <span>
+                              {info.memberCount?.toLocaleString()} {activeConversation.type === 'channel' ? t('مشترك', 'subscribers') : t('عضو', 'members')}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
               <div className="flex items-center gap-1">
+                {activeConversation.type === 'private' && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                      data-testid="call-btn"
+                    >
+                      <Phone className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                      data-testid="video-btn"
+                    >
+                      <Video className="w-5 h-5" />
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
-                >
-                  <Phone className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
-                >
-                  <Video className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                  data-testid="search-chat-btn"
                 >
                   <Search className="w-5 h-5" />
                 </Button>
@@ -678,12 +849,12 @@ const ChatPage = () => {
                       variant="ghost"
                       size="sm"
                       className="text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] h-10 w-10 p-0"
+                      data-testid="chat-menu-btn"
                     >
                       <MoreVertical className="w-5 h-5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-[#17212b] border-[#232e3c] text-white">
-                    {/* Search */}
                     <DropdownMenuItem 
                       onSelect={() => setShowSearchInChat(true)}
                       className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
@@ -692,18 +863,16 @@ const ChatPage = () => {
                       {t('بحث', 'Search')}
                     </DropdownMenuItem>
                     
-                    {/* Mute/Unmute */}
                     <DropdownMenuItem 
                       onSelect={() => handleMuteConversation(activeConversation.id)}
                       className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
                     >
-                      {mutedConversations.includes(activeConversation?.id) ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-                      {mutedConversations.includes(activeConversation?.id) ? t('تشغيل الإشعارات', 'Unmute') : t('كتم الإشعارات', 'Mute')}
+                      {activeConversation.muted ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                      {activeConversation.muted ? t('تشغيل الإشعارات', 'Unmute') : t('كتم الإشعارات', 'Mute')}
                     </DropdownMenuItem>
                     
                     <DropdownMenuSeparator className="bg-[#232e3c]" />
                     
-                    {/* Change Background */}
                     <DropdownMenuItem 
                       onSelect={() => {
                         const backgrounds = ['default', 'pattern2', 'solid', 'gradient'];
@@ -719,16 +888,14 @@ const ChatPage = () => {
                     
                     <DropdownMenuSeparator className="bg-[#232e3c]" />
                     
-                    {/* Pin/Unpin */}
                     <DropdownMenuItem 
                       onSelect={() => handlePinConversation(activeConversation.id)}
                       className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
                     >
-                      {pinnedConversations.includes(activeConversation?.id) ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-                      {pinnedConversations.includes(activeConversation?.id) ? t('إلغاء التثبيت', 'Unpin') : t('تثبيت', 'Pin')}
+                      {activeConversation.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                      {activeConversation.pinned ? t('إلغاء التثبيت', 'Unpin') : t('تثبيت', 'Pin')}
                     </DropdownMenuItem>
                     
-                    {/* Archive */}
                     <DropdownMenuItem 
                       onSelect={() => handleArchiveConversation(activeConversation.id)}
                       className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
@@ -739,7 +906,6 @@ const ChatPage = () => {
                     
                     <DropdownMenuSeparator className="bg-[#232e3c]" />
                     
-                    {/* Clear History */}
                     <DropdownMenuItem 
                       onSelect={() => setClearHistoryDialog(true)}
                       className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
@@ -748,7 +914,6 @@ const ChatPage = () => {
                       {t('مسح السجل', 'Clear History')}
                     </DropdownMenuItem>
                     
-                    {/* Delete Conversation */}
                     <DropdownMenuItem 
                       onSelect={() => setDeleteConversationDialog(true)}
                       className="gap-3 text-red-400 hover:text-red-300 hover:bg-[#232e3c] cursor-pointer"
@@ -771,6 +936,7 @@ const ChatPage = () => {
                   onChange={(e) => setSearchInChat(e.target.value)}
                   className="flex-1 h-9 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883] rounded-lg"
                   autoFocus
+                  data-testid="search-in-chat-input"
                 />
                 <Button
                   variant="ghost"
@@ -820,7 +986,6 @@ const ChatPage = () => {
                       isSelected ? 'bg-[#5288c1]/20 rounded-lg' : ''
                     } ${selectionMode ? 'cursor-pointer' : ''}`}
                   >
-                    {/* Selection Checkbox */}
                     {selectionMode && (
                       <div className="flex items-center justify-center w-8">
                         {isSelected ? (
@@ -833,15 +998,21 @@ const ChatPage = () => {
                     
                     {!isOwn && showAvatar && !selectionMode && (
                       <Avatar className="w-[34px] h-[34px] mt-auto">
-                        <AvatarImage src={activeConversation.otherUser.photo} />
+                        <AvatarImage src={activeConversation.type === 'private' ? activeConversation.otherUser?.photo : msg.senderPhoto} />
                         <AvatarFallback className="bg-gradient-to-br from-[#5288c1] to-[#7a5fca] text-white text-sm">
-                          {activeConversation.otherUser.name?.charAt(0)}
+                          {(activeConversation.type === 'private' ? activeConversation.otherUser?.name : msg.senderName)?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                     )}
                     {!isOwn && !showAvatar && !selectionMode && <div className="w-[34px]" />}
                     
                     <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+                      {/* Show sender name in groups */}
+                      {!isOwn && activeConversation.type !== 'private' && showAvatar && (
+                        <span className="text-[#5288c1] text-[13px] font-medium mb-1 mr-3">
+                          {msg.senderName}
+                        </span>
+                      )}
                       {msg.replyTo && (
                         <div className={`text-[12px] px-3 py-2 mb-1 rounded-xl border-r-2 ${
                           isOwn ? 'bg-[#2b5278]/50 border-[#5288c1]' : 'bg-[#182533] border-[#5288c1]'
@@ -871,7 +1042,7 @@ const ChatPage = () => {
                               {t('معدّلة', 'edited')}
                             </span>
                           )}
-                          {isOwn && (
+                          {isOwn && activeConversation.type === 'private' && (
                             msg.read ? (
                               <CheckCheck className="w-[16px] h-[16px] text-[#4dcd5e]" />
                             ) : (
@@ -880,7 +1051,6 @@ const ChatPage = () => {
                           )}
                         </div>
                         
-                        {/* Message Actions - Show on hover when not in selection mode */}
                         {!selectionMode && (
                           <div className={`absolute ${isOwn ? 'left-0' : 'right-0'} -top-8 opacity-0 group-hover:opacity-100 transition-opacity z-10`}>
                             <div className="flex gap-[2px] bg-[#17212b] shadow-lg rounded-lg p-1 border border-[#232e3c]">
@@ -962,89 +1132,106 @@ const ChatPage = () => {
               </div>
             )}
 
-            {/* Message Input */}
-            <div className="px-3 py-2 bg-[#17212b] border-t border-[#232e3c]">
-              <div className="flex items-end gap-2">
-                <div className="flex gap-1">
-                  <input
-                    type="file"
-                    ref={imageInputRef}
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-10 w-10 p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c]"
-                    onClick={() => imageInputRef.current?.click()}
-                  >
-                    <ImageIcon className="w-5 h-5" />
-                  </Button>
+            {/* Message Input - Only show for private chats and groups with send permission */}
+            {(activeConversation.type !== 'channel' || activeConversation.channel?.canSendMessages) && (
+              <div className="px-3 py-2 bg-[#17212b] border-t border-[#232e3c]">
+                <div className="flex items-end gap-2">
+                  <div className="flex gap-1">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c]"
+                      onClick={() => imageInputRef.current?.click()}
+                      data-testid="upload-image-btn"
+                    >
+                      <ImageIcon className="w-5 h-5" />
+                    </Button>
+                    
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c]"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="upload-file-btn"
+                    >
+                      <Paperclip className="w-5 h-5" />
+                    </Button>
+                  </div>
                   
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-10 w-10 p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c]"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </Button>
-                </div>
-                
-                <div className="flex-1 relative">
-                  <Input
-                    placeholder={t('اكتب رسالة...', 'Write a message...')}
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="h-[44px] pr-12 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883] rounded-[22px] focus-visible:ring-0 focus-visible:ring-offset-0 text-[15px]"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-[#8b9eb0] hover:text-white hover:bg-transparent"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  >
-                    <Smile className="w-5 h-5" />
-                  </Button>
+                  <div className="flex-1 relative">
+                    <Input
+                      placeholder={t('اكتب رسالة...', 'Write a message...')}
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="h-[44px] pr-12 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883] rounded-[22px] focus-visible:ring-0 focus-visible:ring-offset-0 text-[15px]"
+                      data-testid="message-input"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-[#8b9eb0] hover:text-white hover:bg-transparent"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      data-testid="emoji-btn"
+                    >
+                      <Smile className="w-5 h-5" />
+                    </Button>
+                    
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-14 left-0 z-50">
+                        <EmojiPicker 
+                          onEmojiClick={handleEmojiClick}
+                          width={350}
+                          height={400}
+                          theme="dark"
+                        />
+                      </div>
+                    )}
+                  </div>
                   
-                  {showEmojiPicker && (
-                    <div className="absolute bottom-14 left-0 z-50">
-                      <EmojiPicker 
-                        onEmojiClick={handleEmojiClick}
-                        width={350}
-                        height={400}
-                        theme="dark"
-                      />
-                    </div>
+                  {messageText.trim() ? (
+                    <Button
+                      onClick={handleSendMessage}
+                      className="bg-[#5288c1] hover:bg-[#4a7ab0] h-[44px] w-[44px] p-0 rounded-full"
+                      data-testid="send-btn"
+                    >
+                      <Send className="w-5 h-5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleVoiceRecord}
+                      variant="ghost"
+                      className="h-[44px] w-[44px] p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] rounded-full"
+                      data-testid="voice-btn"
+                    >
+                      <Mic className="w-5 h-5" />
+                    </Button>
                   )}
                 </div>
-                
-                {messageText.trim() ? (
-                  <Button
-                    onClick={handleSendMessage}
-                    className="bg-[#5288c1] hover:bg-[#4a7ab0] h-[44px] w-[44px] p-0 rounded-full"
-                  >
-                    <Send className="w-5 h-5" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleVoiceRecord}
-                    variant="ghost"
-                    className="h-[44px] w-[44px] p-0 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] rounded-full"
-                  >
-                    <Mic className="w-5 h-5" />
-                  </Button>
-                )}
               </div>
-            </div>
+            )}
+
+            {/* Channel View Only Notice */}
+            {activeConversation.type === 'channel' && !activeConversation.channel?.canSendMessages && (
+              <div className="px-4 py-3 bg-[#17212b] border-t border-[#232e3c] text-center">
+                <p className="text-[#8b9eb0] text-sm">
+                  {t('هذه قناة للقراءة فقط', 'This is a read-only channel')}
+                </p>
+              </div>
+            )}
           </>
         ) : (
           /* Empty State */
@@ -1059,18 +1246,19 @@ const ChatPage = () => {
               <p className="text-[#8b9eb0] text-[15px] max-w-[320px] mx-auto mb-6 leading-relaxed">
                 {t('ابدأ محادثة جديدة أو اختر محادثة من القائمة الجانبية', 'Start a new conversation or select one from the sidebar')}
               </p>
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-3 justify-center flex-wrap">
                 <Button
                   onClick={() => navigate('/rider')}
                   variant="outline"
                   className="bg-transparent border-[#5288c1] text-[#5288c1] hover:bg-[#5288c1] hover:text-white"
+                  data-testid="home-btn"
                 >
                   <Home className="w-4 h-4 ml-2" />
                   {t('الرئيسية', 'Home')}
                 </Button>
                 <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white">
+                    <Button className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white" data-testid="new-chat-btn">
                       <UserPlus className="w-4 h-4 ml-2" />
                       {t('محادثة جديدة', 'New Chat')}
                     </Button>
@@ -1088,10 +1276,12 @@ const ChatPage = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearchUser()}
                         className="h-12 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883]"
+                        data-testid="user-search-input"
                       />
                       <Button
                         onClick={handleSearchUser}
                         className="w-full bg-[#5288c1] hover:bg-[#4a7ab0]"
+                        data-testid="search-user-btn"
                       >
                         <Search className="w-4 h-4 ml-2" />
                         {t('بحث', 'Search')}
@@ -1122,8 +1312,9 @@ const ChatPage = () => {
             <button
               onClick={() => handlePinConversation(convActionMenu.convId)}
               className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
+              data-testid="ctx-pin"
             >
-              {pinnedConversations.includes(convActionMenu.convId) ? (
+              {conversations.find(c => c.id === convActionMenu.convId)?.pinned ? (
                 <>
                   <PinOff className="w-5 h-5" />
                   {t('إلغاء التثبيت', 'Unpin')}
@@ -1132,17 +1323,15 @@ const ChatPage = () => {
                 <>
                   <Pin className="w-5 h-5" />
                   {t('تثبيت', 'Pin')}
-                  {pinnedConversations.length >= MAX_PINNED && (
-                    <span className="text-xs text-[#6c7883] mr-auto">({MAX_PINNED}/{MAX_PINNED})</span>
-                  )}
                 </>
               )}
             </button>
             <button
               onClick={() => handleMuteConversation(convActionMenu.convId)}
               className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
+              data-testid="ctx-mute"
             >
-              {mutedConversations.includes(convActionMenu.convId) ? (
+              {conversations.find(c => c.id === convActionMenu.convId)?.muted ? (
                 <>
                   <Bell className="w-5 h-5" />
                   {t('تشغيل الإشعارات', 'Unmute')}
@@ -1157,6 +1346,7 @@ const ChatPage = () => {
             <button
               onClick={() => handleArchiveConversation(convActionMenu.convId)}
               className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
+              data-testid="ctx-archive"
             >
               <Archive className="w-5 h-5" />
               {t('أرشفة', 'Archive')}
@@ -1168,6 +1358,7 @@ const ChatPage = () => {
                 setDeleteConversationDialog(true);
               }}
               className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-[#232e3c] text-right"
+              data-testid="ctx-delete"
             >
               <Trash2 className="w-5 h-5" />
               {t('حذف', 'Delete')}
@@ -1185,6 +1376,7 @@ const ChatPage = () => {
               size="sm"
               onClick={handleCancelSelection}
               className="text-[#8b9eb0] hover:text-white"
+              data-testid="cancel-selection"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -1196,8 +1388,9 @@ const ChatPage = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleForwardSelectedMessages}
+              onClick={() => toast({ title: t('قريباً', 'Coming Soon') })}
               className="text-[#8b9eb0] hover:text-white"
+              data-testid="forward-selected"
             >
               <Forward className="w-5 h-5" />
             </Button>
@@ -1206,6 +1399,7 @@ const ChatPage = () => {
               size="sm"
               onClick={handleDeleteSelectedMessages}
               className="text-red-400 hover:text-red-300"
+              data-testid="delete-selected"
             >
               <Trash2 className="w-5 h-5" />
             </Button>
@@ -1228,6 +1422,13 @@ const ChatPage = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #4d5d6c;
         }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
 
       {/* Clear History Dialog */}
@@ -1245,6 +1446,7 @@ const ChatPage = () => {
             <Button
               onClick={() => handleClearHistory(true)}
               className="bg-red-500 hover:bg-red-600 text-white w-full justify-start gap-3"
+              data-testid="clear-both"
             >
               <Users className="w-4 h-4" />
               {t('مسح من الطرفين', 'Clear for both sides')}
@@ -1253,6 +1455,7 @@ const ChatPage = () => {
               onClick={() => handleClearHistory(false)}
               variant="outline"
               className="border-[#232e3c] text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] w-full justify-start gap-3"
+              data-testid="clear-me"
             >
               <User className="w-4 h-4" />
               {t('مسح من طرفي فقط', 'Clear for me only')}
@@ -1283,6 +1486,7 @@ const ChatPage = () => {
             <Button
               onClick={() => handleDeleteConversation(true)}
               className="bg-red-500 hover:bg-red-600 text-white w-full justify-start gap-3"
+              data-testid="delete-both"
             >
               <Users className="w-4 h-4" />
               {t('حذف من الطرفين', 'Delete for both sides')}
@@ -1291,6 +1495,7 @@ const ChatPage = () => {
               onClick={() => handleDeleteConversation(false)}
               variant="outline"
               className="border-[#232e3c] text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] w-full justify-start gap-3"
+              data-testid="delete-me"
             >
               <User className="w-4 h-4" />
               {t('حذف من طرفي فقط', 'Delete for me only')}
