@@ -101,37 +101,38 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6" data-testid="dashboard-page">
+    <div className="space-y-4 md:space-y-6" data-testid="dashboard-page">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">لوحة التحكم</h1>
-          <p className="text-zinc-500 mt-1">نظرة عامة على أداء التطبيق</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">لوحة التحكم</h1>
+          <p className="text-zinc-500 text-sm mt-1">نظرة عامة على أداء التطبيق</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={loading}
-            className="border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300"
+            className="border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 text-xs md:text-sm"
             data-testid="refresh-stats-btn"
           >
-            <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
-            تحديث
+            <RefreshCw className={`w-4 h-4 ml-1 md:ml-2 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">تحديث</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handleSeedDatabase}
             disabled={seeding}
-            className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"
+            className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs md:text-sm"
             data-testid="seed-database-btn"
           >
-            <Database className={`w-4 h-4 ml-2 ${seeding ? 'animate-spin' : ''}`} />
-            {seeding ? 'جاري التحميل...' : 'تحميل بيانات تجريبية'}
+            <Database className={`w-4 h-4 ml-1 md:ml-2 ${seeding ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{seeding ? 'جاري...' : 'بيانات تجريبية'}</span>
+            <span className="sm:hidden">{seeding ? '...' : 'بيانات'}</span>
           </Button>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
             <Activity className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-medium text-emerald-400">النظام يعمل</span>
           </div>
@@ -139,7 +140,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           title="إجمالي المستخدمين"
           value={stats.totalUsers.toLocaleString()}
