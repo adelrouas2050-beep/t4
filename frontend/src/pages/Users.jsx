@@ -127,6 +127,99 @@ export default function Users() {
     setLoading(false);
   };
 
+  // Form validation
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'الاسم مطلوب';
+    } else if (formData.name.trim().length < 3) {
+      errors.name = 'الاسم يجب أن يكون 3 أحرف على الأقل';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'البريد الإلكتروني مطلوب';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'البريد الإلكتروني غير صحيح';
+    } else if (users.some(u => u.email?.toLowerCase() === formData.email.toLowerCase())) {
+      errors.email = 'البريد الإلكتروني مستخدم بالفعل';
+    }
+    
+    if (!formData.phone.trim()) {
+      errors.phone = 'رقم الهاتف مطلوب';
+    } else if (!/^[\d+\-\s]{8,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+      errors.phone = 'رقم الهاتف غير صحيح';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form input change
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Add new user
+  const handleAddUser = async () => {
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    try {
+      const newUser = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        status: formData.status,
+        rides: 0,
+        orders: 0,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=6366f1&color=fff`
+      };
+      
+      const response = await fetch(`${API_URL}/api/users`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}` 
+        },
+        body: JSON.stringify(newUser)
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'تم إضافة المستخدم',
+          description: `تم إضافة ${formData.name} بنجاح`,
+        });
+        setShowAddUserDialog(false);
+        setFormData(initialFormState);
+        setFormErrors({});
+        await fetchUsers();
+      } else {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to add user');
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل إضافة المستخدم',
+        description: error.message || 'حدث خطأ أثناء إضافة المستخدم',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Close add dialog and reset form
+  const handleCloseAddDialog = () => {
+    setShowAddUserDialog(false);
+    setFormData(initialFormState);
+    setFormErrors({});
+  };
+
   // Delete user
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
