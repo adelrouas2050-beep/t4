@@ -259,14 +259,12 @@ const ChatPage = () => {
     });
   };
 
-  const handleDeleteMessage = (messageId, deleteForBoth = false) => {
+  const handleDeleteMessage = async (messageId, deleteForBoth = true) => {
     if (activeConversation) {
-      deleteMessage(activeConversation.id, messageId, deleteForBoth);
+      await deleteMessage(activeConversation.id, messageId, deleteForBoth);
       toast({
         title: t('تم الحذف', 'Deleted'),
-        description: deleteForBoth 
-          ? t('تم حذف الرسالة من الطرفين', 'Message deleted for both')
-          : t('تم حذف الرسالة', 'Message deleted')
+        description: t('تم حذف الرسالة بنجاح', 'Message deleted successfully')
       });
     }
   };
