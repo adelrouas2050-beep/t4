@@ -38,7 +38,7 @@ import {
   PinOff, Volume2, VolumeX, ImageOff, Forward, Square, CheckSquare,
   Radio, Plus, Megaphone, UsersRound, MessageSquare, Hash,
   Cloud, File, FileText, Music, Film, HardDrive, Upload, Eye, ChevronRight,
-  Camera, Type, CirclePlus, ArchiveRestore
+  Camera, Type, CirclePlus, ArchiveRestore, RotateCcw, AlertCircle, Loader2
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
