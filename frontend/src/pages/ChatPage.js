@@ -693,16 +693,21 @@ const ChatPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveFolder(tab.id)}
-              className={`flex-1 min-w-[70px] py-3 px-2 text-center transition-all duration-200 relative ${
+              className={`flex-1 min-w-[60px] py-3 px-1 text-center transition-all duration-200 relative ${
                 activeFolder === tab.id 
                   ? 'text-[#5288c1]' 
                   : 'text-[#8b9eb0] hover:text-white'
               }`}
               data-testid={`tab-${tab.id.toLowerCase()}`}
             >
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-1 relative">
                 <tab.icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <span className="text-[10px] font-medium">{tab.label}</span>
+                {tab.count > 0 && (
+                  <Badge className="absolute -top-1 -right-2 bg-[#5288c1] text-[10px] h-4 min-w-[16px] px-1">
+                    {tab.count}
+                  </Badge>
+                )}
               </div>
               {activeFolder === tab.id && (
                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#5288c1] rounded-t-full" />
@@ -711,56 +716,110 @@ const ChatPage = () => {
           ))}
         </div>
 
+        {/* Stories Section - Only show on All and Personal tabs */}
+        {(activeFolder === 'All' || activeFolder === 'Personal') && stories && stories.length > 0 && (
+          <div className="border-b border-[#232e3c] p-3">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar">
+              {/* Add Story Button */}
+              <div 
+                className="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
+                onClick={() => setShowAddStory(true)}
+                data-testid="add-story-btn"
+              >
+                <div className="relative">
+                  <div className="w-[58px] h-[58px] rounded-full bg-[#232e3c] flex items-center justify-center border-2 border-dashed border-[#5288c1]">
+                    <Plus className="w-6 h-6 text-[#5288c1]" />
+                  </div>
+                </div>
+                <span className="text-[11px] text-[#8b9eb0] w-[60px] text-center truncate">
+                  {t('ستوري', 'Story')}
+                </span>
+              </div>
+              
+              {/* Other Users Stories */}
+              {stories.map((userStories) => (
+                <div 
+                  key={userStories.userId}
+                  className="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
+                  onClick={() => handleOpenStory(userStories)}
+                  data-testid={`story-${userStories.userId}`}
+                >
+                  <div className={`p-[2px] rounded-full ${userStories.hasUnviewed ? 'bg-gradient-to-tr from-[#5288c1] to-[#7a5fca]' : 'bg-[#3d4d5c]'}`}>
+                    <Avatar className="w-[54px] h-[54px] border-2 border-[#17212b]">
+                      <AvatarImage src={userStories.user.photo} />
+                      <AvatarFallback className="bg-gradient-to-br from-[#5288c1] to-[#7a5fca] text-white">
+                        {userStories.user.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <span className="text-[11px] text-[#8b9eb0] w-[60px] text-center truncate">
+                    {language === 'ar' ? userStories.user.name.split(' ')[0] : userStories.user.nameEn.split(' ')[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
               <div className="w-20 h-20 bg-[#232e3c] rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-10 h-10 text-[#5288c1]" />
+                {activeFolder === 'Archived' ? (
+                  <Archive className="w-10 h-10 text-[#5288c1]" />
+                ) : (
+                  <MessageCircle className="w-10 h-10 text-[#5288c1]" />
+                )}
               </div>
               <p className="text-[#8b9eb0] text-sm mb-2">
                 {activeFolder === 'Groups' 
                   ? t('لا توجد مجموعات', 'No groups')
                   : activeFolder === 'Channels'
                   ? t('لا توجد قنوات', 'No channels')
+                  : activeFolder === 'Archived'
+                  ? t('لا توجد محادثات مؤرشفة', 'No archived conversations')
                   : t('لا توجد محادثات', 'No conversations')}
               </p>
-              <Button
-                onClick={() => {
-                  if (activeFolder === 'Groups') {
-                    navigate('/create-group');
-                  } else if (activeFolder === 'Channels') {
-                    navigate('/create-channel');
-                  } else {
-                    setSearchDialogOpen(true);
-                  }
-                }}
-                className="mt-4 bg-[#5288c1] hover:bg-[#4a7ab0] text-white"
-                data-testid="start-chat-btn"
-              >
-                {activeFolder === 'Groups' ? (
-                  <>
-                    <UsersRound className="w-4 h-4 ml-2" />
-                    {t('إنشاء مجموعة', 'Create Group')}
-                  </>
-                ) : activeFolder === 'Channels' ? (
-                  <>
-                    <Megaphone className="w-4 h-4 ml-2" />
-                    {t('إنشاء قناة', 'Create Channel')}
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 ml-2" />
-                    {t('بدء محادثة', 'Start Chat')}
-                  </>
-                )}
-              </Button>
+              {activeFolder !== 'Archived' && (
+                <Button
+                  onClick={() => {
+                    if (activeFolder === 'Groups') {
+                      navigate('/create-group');
+                    } else if (activeFolder === 'Channels') {
+                      navigate('/create-channel');
+                    } else {
+                      setSearchDialogOpen(true);
+                    }
+                  }}
+                  className="mt-4 bg-[#5288c1] hover:bg-[#4a7ab0] text-white"
+                  data-testid="start-chat-btn"
+                >
+                  {activeFolder === 'Groups' ? (
+                    <>
+                      <UsersRound className="w-4 h-4 ml-2" />
+                      {t('إنشاء مجموعة', 'Create Group')}
+                    </>
+                  ) : activeFolder === 'Channels' ? (
+                    <>
+                      <Megaphone className="w-4 h-4 ml-2" />
+                      {t('إنشاء قناة', 'Create Channel')}
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 ml-2" />
+                      {t('بدء محادثة', 'Start Chat')}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           ) : (
             filteredConversations.map((conv) => {
               const convInfo = getConversationInfo(conv);
               const isPinned = conv.pinned;
               const isMuted = conv.muted;
+              const isArchived = conv.archived;
               
               return (
                 <div
