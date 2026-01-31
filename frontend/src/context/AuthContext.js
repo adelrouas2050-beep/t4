@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockUser } from '../mock/data';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
