@@ -553,6 +553,73 @@ const ChatPage = () => {
     setActiveConversation(null);
   };
 
+  // ============== DELETED MESSAGES FUNCTIONS ==============
+  
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  
+  const fetchMyDeletedMessages = async () => {
+    const userId = user?.userId || user?.id;
+    if (!userId) return;
+    
+    setLoadingDeleted(true);
+    try {
+      const response = await fetch(`${API_URL}/api/chat/my-deleted-messages/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyDeletedMessages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching deleted messages:', error);
+    } finally {
+      setLoadingDeleted(false);
+    }
+  };
+  
+  const requestRestore = async (messageId, reason = '') => {
+    const userId = user?.userId || user?.id;
+    if (!userId) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/api/chat/trash/request-restore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId,
+          requestedBy: userId,
+          reason
+        })
+      });
+      
+      if (response.ok) {
+        toast({
+          title: t('تم إرسال الطلب', 'Request Sent'),
+          description: t('سيتم مراجعة طلبك من قبل المدير', 'Your request will be reviewed by admin')
+        });
+        fetchMyDeletedMessages(); // تحديث القائمة
+      } else {
+        const error = await response.json();
+        toast({
+          title: t('خطأ', 'Error'),
+          description: error.detail || t('فشل في إرسال الطلب', 'Failed to send request'),
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t('خطأ', 'Error'),
+        description: t('فشل في الاتصال', 'Connection failed'),
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  const getRemainingDays = (expiresAt) => {
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diff = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  };
+
   // ============== CALL FUNCTIONS ==============
   
   const startCall = (type) => {
