@@ -1,47 +1,60 @@
 # Transfers Admin - PRD
 
 ## المشكلة الأصلية
-إضافة قاعدة بيانات لحفظ المعلومات الجديدة من صفحة التسجيل وربطها بلوحة التحكم
+بناء قاعدة بيانات شاملة للتطبيق بالكامل
 
 ## ما تم تنفيذه
 
 ### تاريخ التحديث: 2026-01-31
 
-#### 1. نظام التسجيل وقاعدة البيانات
-- ✅ إضافة API `/api/auth/register` لتسجيل المستخدمين
-- ✅ إضافة API `/api/auth/user-login` لتسجيل الدخول
-- ✅ حفظ البيانات في MongoDB (collection: registered_users)
-- ✅ تشفير كلمات المرور باستخدام SHA256
-- ✅ التحقق من عدم تكرار اسم المستخدم والبريد الإلكتروني
+#### 1. نظام المستخدمين
+- ✅ `registered_users` - المستخدمين المسجلين (userId, name, email, phone, password, userType)
+- ✅ `users` - بيانات المستخدمين الإضافية
+- ✅ `admins` - المديرين
 
-#### 2. تحسينات الواجهة
-- ✅ تغيير "الآيدي (ID)" إلى "اسم المستخدم" في صفحة التسجيل
-- ✅ إضافة خانة كلمة المرور إجبارية في صفحة إضافة عضو بلوحة التحكم
+#### 2. نظام الدردشة
+- ✅ `conversations` - المحادثات (id, type, participants, lastMessage, createdAt)
+- ✅ `messages` - الرسائل (id, conversationId, senderId, content, type, read)
+- ✅ APIs: إنشاء محادثة، إرسال رسالة، جلب المحادثات والرسائل
 
-#### 3. الحقول المحفوظة
-- userId (اسم المستخدم الفريد)
-- name (الاسم الكامل)
-- email (البريد الإلكتروني)
-- phone (رقم الجوال)
-- password (مشفرة)
-- userType (نوع المستخدم: rider/driver)
-- createdAt (تاريخ الإنشاء)
+#### 3. نظام النقل
+- ✅ `drivers` - السائقين (id, name, phone, vehicle, plate, status, rating)
+- ✅ `rides` - الرحلات (id, user, driver, from, to, status, fare)
+
+#### 4. نظام الطلبات
+- ✅ `restaurants` - المطاعم (id, name, category, rating, status)
+- ✅ `orders` - الطلبات (id, user, restaurant, items, total, status)
+
+#### 5. النظام الإداري
+- ✅ `promotions` - العروض الترويجية
+- ✅ الإحصائيات الشاملة
 
 ## البنية التقنية
-- **Backend**: FastAPI + MongoDB
+- **Database**: MongoDB
+- **Backend**: FastAPI
 - **Frontend**: React.js
 - **Authentication**: JWT
 
-## المهام المتبقية (Backlog)
-- P1: إضافة التحقق من البريد الإلكتروني
-- P2: إضافة استعادة كلمة المرور
-- P2: تحسين أمان كلمات المرور
+## Collections في MongoDB
+1. registered_users - المستخدمين المسجلين
+2. users - بيانات المستخدمين
+3. admins - المديرين
+4. conversations - المحادثات
+5. messages - الرسائل
+6. drivers - السائقين
+7. rides - الرحلات
+8. restaurants - المطاعم
+9. orders - الطلبات
+10. promotions - العروض
 
-### تاريخ التحديث: 2026-01-31 (تحديث 2)
-
-#### 4. ربط الدردشة بقاعدة البيانات
-- ✅ إضافة API `/api/auth/search-users` للبحث عن المستخدمين
-- ✅ إضافة API `/api/auth/user/{userId}` لجلب بيانات مستخدم
-- ✅ تحديث صفحة الدردشة للبحث من قاعدة البيانات
-- ✅ عرض نتائج البحث في Dialog مع إمكانية اختيار المستخدم
-- ✅ بدء محادثة جديدة مع المستخدم المختار
+## APIs المتاحة
+- `/api/auth/*` - التسجيل وتسجيل الدخول والبحث
+- `/api/chat/*` - الدردشة والرسائل
+- `/api/users/*` - إدارة المستخدمين
+- `/api/drivers/*` - إدارة السائقين
+- `/api/rides/*` - إدارة الرحلات
+- `/api/orders/*` - إدارة الطلبات
+- `/api/restaurants/*` - إدارة المطاعم
+- `/api/promotions/*` - إدارة العروض
+- `/api/stats/*` - الإحصائيات
+- `/api/backup/*` - النسخ الاحتياطي
