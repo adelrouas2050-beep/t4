@@ -49,6 +49,7 @@ rides_router = APIRouter(prefix="/api/rides", tags=["Rides"])
 orders_router = APIRouter(prefix="/api/orders", tags=["Orders"])
 promotions_router = APIRouter(prefix="/api/promotions", tags=["Promotions"])
 stats_router = APIRouter(prefix="/api/stats", tags=["Statistics"])
+backup_router = APIRouter(prefix="/api/backup", tags=["Backup"])
 
 security = HTTPBearer()
 
