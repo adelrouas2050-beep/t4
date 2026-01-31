@@ -266,24 +266,21 @@ export default function Users() {
     
     setIsSubmitting(true);
     try {
-      const newUser = {
-        username: formData.username.trim().toLowerCase(),
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim() || null,
-        status: formData.status,
-        rides: 0,
-        orders: 0,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=6366f1&color=fff`
-      };
-      
-      const response = await fetch(`${API_URL}/api/users`, {
+      // Call registration API to save user with password
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getToken()}` 
         },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify({
+          userId: formData.username.trim().toLowerCase(),
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim() || '',
+          password: formData.password,
+          userType: 'rider'
+        })
       });
       
       if (response.ok) {
