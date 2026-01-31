@@ -38,6 +38,7 @@ import Rides from './pages/Rides';
 import Orders from './pages/Orders';
 import Promotions from './pages/Promotions';
 import Settings from './pages/Settings';
+import Trash from './pages/Trash';
 
 // Protected Route for User App
 const ProtectedRoute = ({ children, requiredType }) => {
