@@ -325,6 +325,85 @@ async def login(data: AdminLogin):
         token=token
     )
 
+# ============== USER REGISTRATION & LOGIN ROUTES ==============
+
+@auth_router.post("/register")
+async def register_user(data: UserRegister):
+    """تسجيل مستخدم جديد"""
+    # التحقق من أن اسم المستخدم غير مستخدم
+    existing_user_id = await db.registered_users.find_one({"userId": data.userId}, {"_id": 0})
+    if existing_user_id:
+        raise HTTPException(status_code=400, detail="اسم المستخدم موجود مسبقاً")
+    
+    # التحقق من أن البريد الإلكتروني غير مستخدم
+    existing_email = await db.registered_users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="البريد الإلكتروني مسجل مسبقاً")
+    
+    # إنشاء المستخدم الجديد
+    new_user = {
+        "userId": data.userId,
+        "name": data.name,
+        "email": data.email.lower(),
+        "phone": data.phone or "",
+        "password": hash_password(data.password),
+        "userType": data.userType,
+        "createdAt": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.registered_users.insert_one(new_user)
+    
+    # إنشاء التوكن
+    token = create_token(data.userId, data.email)
+    
+    # إرجاع البيانات بدون كلمة المرور
+    return {
+        "success": True,
+        "user": {
+            "userId": data.userId,
+            "name": data.name,
+            "email": data.email.lower(),
+            "phone": data.phone or "",
+            "userType": data.userType
+        },
+        "token": token,
+        "message": "تم التسجيل بنجاح"
+    }
+
+@auth_router.post("/user-login")
+async def user_login(data: LoginRequest):
+    """تسجيل دخول المستخدم"""
+    # البحث عن المستخدم بالبريد الإلكتروني
+    user = await db.registered_users.find_one({"email": data.email.lower()}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="البريد الإلكتروني غير مسجل")
+    
+    # التحقق من كلمة المرور
+    if user.get("password") != hash_password(data.password):
+        raise HTTPException(status_code=401, detail="كلمة المرور غير صحيحة")
+    
+    # إنشاء التوكن
+    token = create_token(user["userId"], user["email"])
+    
+    return {
+        "success": True,
+        "user": {
+            "userId": user["userId"],
+            "name": user["name"],
+            "email": user["email"],
+            "phone": user.get("phone", ""),
+            "userType": user.get("userType", "rider")
+        },
+        "token": token
+    }
+
+@auth_router.get("/check-user/{user_id}")
+async def check_user_exists(user_id: str):
+    """التحقق من وجود اسم المستخدم"""
+    existing = await db.registered_users.find_one({"userId": user_id}, {"_id": 0})
+    return {"exists": existing is not None}
+
 @auth_router.get("/me")
 async def get_current_admin(payload: dict = Depends(verify_token)):
     admin = await db.admins.find_one({"email": payload["email"]}, {"_id": 0, "password": 0})
