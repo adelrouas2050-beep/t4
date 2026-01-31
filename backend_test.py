@@ -340,6 +340,12 @@ class UserRegistrationAPITester:
             # Test user login
             self.test_user_login()
         
+        # Test user search functionality
+        self.test_search_users()
+        
+        # Test get user by ID
+        self.test_get_user_by_id()
+        
         # Test admin login separately
         self.test_admin_login()
         
