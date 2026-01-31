@@ -406,10 +406,27 @@ export const AdvancedChatProvider = ({ children }) => {
       togglePin,
       toggleMute,
       archiveConversation,
+      unarchiveConversation,
       deleteConversation,
+      editMessage,
+      deleteMessage,
       markAsRead,
       getTotalUnreadCount,
       getFilteredConversations,
+      getArchivedCount,
+      // Stories
+      stories,
+      myStories,
+      addStory,
+      viewStory,
+      deleteStory,
+      getActiveStories,
+      // Cloud Storage
+      cloudFiles,
+      uploadFile,
+      deleteFile,
+      getCloudFiles,
+      getStorageUsed,
       stickers: mockStickers,
       gifs: mockGifs
     }}>
