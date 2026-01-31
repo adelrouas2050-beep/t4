@@ -681,6 +681,178 @@ async def seed_database():
 async def root():
     return {"message": "Transfers Admin API", "version": "1.0.0"}
 
+# ============== BACKUP ROUTES ==============
+
+async def perform_backup(backup_type: str = "manual") -> BackupInfo:
+    """Perform database backup"""
+    global last_auto_backup
+    
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    filename = f"backup_{backup_type}_{timestamp}.json"
+    filepath = BACKUP_DIR / filename
+    
+    # Collections to backup
+    collections = ['users', 'drivers', 'restaurants', 'rides', 'orders', 'promotions', 'admins']
+    
+    backup_data = {
+        'metadata': {
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'type': backup_type,
+            'version': '1.0'
+        },
+        'data': {}
+    }
+    
+    for collection_name in collections:
+        collection = db[collection_name]
+        documents = await collection.find({}, {"_id": 0}).to_list(100000)
+        backup_data['data'][collection_name] = documents
+    
+    # Save to file
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(backup_data, f, ensure_ascii=False, indent=2, default=str)
+    
+    file_size = filepath.stat().st_size
+    
+    # Update last backup time
+    last_auto_backup = datetime.now(timezone.utc)
+    
+    # Save backup info to database
+    backup_info = {
+        'id': f"BK{timestamp}",
+        'filename': filename,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'size': file_size,
+        'type': backup_type,
+        'collections': collections
+    }
+    await db.backups.insert_one(backup_info)
+    
+    return BackupInfo(**backup_info)
+
+@backup_router.post("/create", response_model=BackupInfo)
+async def create_backup(payload: dict = Depends(verify_token)):
+    """Create manual backup"""
+    try:
+        backup = await perform_backup("manual")
+        return backup
+    except Exception as e:
+        logger.error(f"Backup failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Backup failed: {str(e)}")
+
+@backup_router.get("/list", response_model=List[BackupInfo])
+async def list_backups(payload: dict = Depends(verify_token)):
+    """List all backups"""
+    backups = await db.backups.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return backups
+
+@backup_router.get("/settings", response_model=BackupSettings)
+async def get_backup_settings(payload: dict = Depends(verify_token)):
+    """Get backup settings"""
+    settings = await db.settings.find_one({"type": "backup"}, {"_id": 0})
+    if not settings:
+        settings = {
+            "type": "backup",
+            "auto_backup_enabled": True,
+            "interval_hours": AUTO_BACKUP_INTERVAL_HOURS
+        }
+        await db.settings.insert_one(settings)
+    
+    # Calculate next backup time
+    if last_auto_backup:
+        next_backup = last_auto_backup + timedelta(hours=settings.get("interval_hours", 6))
+        settings["last_backup"] = last_auto_backup.isoformat()
+        settings["next_backup"] = next_backup.isoformat()
+    
+    return BackupSettings(
+        auto_backup_enabled=settings.get("auto_backup_enabled", True),
+        interval_hours=settings.get("interval_hours", 6),
+        last_backup=settings.get("last_backup"),
+        next_backup=settings.get("next_backup")
+    )
+
+@backup_router.put("/settings")
+async def update_backup_settings(
+    auto_backup_enabled: bool = True,
+    interval_hours: int = 6,
+    payload: dict = Depends(verify_token)
+):
+    """Update backup settings"""
+    await db.settings.update_one(
+        {"type": "backup"},
+        {"$set": {
+            "auto_backup_enabled": auto_backup_enabled,
+            "interval_hours": interval_hours
+        }},
+        upsert=True
+    )
+    return {"message": "Settings updated", "auto_backup_enabled": auto_backup_enabled, "interval_hours": interval_hours}
+
+@backup_router.delete("/{backup_id}")
+async def delete_backup(backup_id: str, payload: dict = Depends(verify_token)):
+    """Delete a backup"""
+    backup = await db.backups.find_one({"id": backup_id}, {"_id": 0})
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup not found")
+    
+    # Delete file
+    filepath = BACKUP_DIR / backup["filename"]
+    if filepath.exists():
+        filepath.unlink()
+    
+    # Delete from database
+    await db.backups.delete_one({"id": backup_id})
+    return {"message": "Backup deleted"}
+
+@backup_router.post("/restore/{backup_id}")
+async def restore_backup(backup_id: str, payload: dict = Depends(verify_token)):
+    """Restore database from backup"""
+    backup = await db.backups.find_one({"id": backup_id}, {"_id": 0})
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup not found")
+    
+    filepath = BACKUP_DIR / backup["filename"]
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="Backup file not found")
+    
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            backup_data = json.load(f)
+        
+        # Restore each collection
+        for collection_name, documents in backup_data['data'].items():
+            if documents:
+                collection = db[collection_name]
+                await collection.delete_many({})
+                await collection.insert_many(documents)
+        
+        return {"message": "Database restored successfully", "collections": list(backup_data['data'].keys())}
+    except Exception as e:
+        logger.error(f"Restore failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Restore failed: {str(e)}")
+
+# Background task for auto backup
+async def auto_backup_task():
+    """Background task for automatic backups"""
+    global last_auto_backup
+    while True:
+        try:
+            settings = await db.settings.find_one({"type": "backup"})
+            if settings and settings.get("auto_backup_enabled", True):
+                interval = settings.get("interval_hours", AUTO_BACKUP_INTERVAL_HOURS)
+                
+                if last_auto_backup is None or \
+                   datetime.now(timezone.utc) - last_auto_backup >= timedelta(hours=interval):
+                    logger.info("Starting automatic backup...")
+                    await perform_backup("auto")
+                    logger.info("Automatic backup completed")
+            
+            # Check every 5 minutes
+            await asyncio.sleep(300)
+        except Exception as e:
+            logger.error(f"Auto backup error: {str(e)}")
+            await asyncio.sleep(60)
+
 # Include all routers
 app.include_router(api_router)
 app.include_router(auth_router)
