@@ -92,6 +92,7 @@ const initialFormState = {
   name: '',
   email: '',
   phone: '',
+  password: '',
   status: 'active'
 };
 
