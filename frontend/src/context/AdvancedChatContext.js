@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { mockConversations, mockMessages, mockUsers, mockGroups, mockStickers, mockGifs } from '../mock/advancedChatData';
+import { mockConversations, mockMessages, mockUsers, mockGroups, mockStickers, mockGifs, mockStories, mockCloudFiles } from '../mock/advancedChatData';
 
 const AdvancedChatContext = createContext();
 
@@ -15,13 +15,20 @@ export const AdvancedChatProvider = ({ children }) => {
   const [conversations, setConversations] = useState(mockConversations);
   const [messages, setMessages] = useState(mockMessages);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [folders, setFolders] = useState(['All', 'Personal', 'Groups', 'Channels']);
+  const [folders, setFolders] = useState(['All', 'Personal', 'Groups', 'Channels', 'Archived']);
   const [activeFolder, setActiveFolder] = useState('All');
   const [secretChats, setSecretChats] = useState([]);
   const [scheduledMessages, setScheduledMessages] = useState([]);
   const [theme, setTheme] = useState('default');
   const [appLocked, setAppLocked] = useState(false);
   const [callInProgress, setCallInProgress] = useState(null);
+  
+  // Stories state
+  const [stories, setStories] = useState(mockStories);
+  const [myStories, setMyStories] = useState([]);
+  
+  // Cloud Storage state
+  const [cloudFiles, setCloudFiles] = useState(mockCloudFiles);
 
   const searchUserById = (userId) => {
     return mockUsers.find(user => user.userId === userId);
