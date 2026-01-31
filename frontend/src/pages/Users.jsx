@@ -771,6 +771,156 @@ export default function Users() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={showAddUserDialog} onOpenChange={handleCloseAddDialog}>
+        <DialogContent className="bg-[#18181b] border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <UserPlus className="w-5 h-5 text-indigo-400" />
+              إضافة مستخدم جديد
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              أدخل بيانات المستخدم الجديد
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {/* Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-zinc-300">
+                الاسم الكامل <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="مثال: أحمد محمد"
+                  className={`pr-10 bg-white/5 border-white/10 focus:border-indigo-500/50 ${
+                    formErrors.name ? 'border-red-500/50' : ''
+                  }`}
+                  data-testid="add-user-name"
+                />
+              </div>
+              {formErrors.name && (
+                <p className="text-red-400 text-xs">{formErrors.name}</p>
+              )}
+            </div>
+
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-zinc-300">
+                البريد الإلكتروني <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="example@email.com"
+                  className={`pr-10 bg-white/5 border-white/10 focus:border-indigo-500/50 ${
+                    formErrors.email ? 'border-red-500/50' : ''
+                  }`}
+                  dir="ltr"
+                  data-testid="add-user-email"
+                />
+              </div>
+              {formErrors.email && (
+                <p className="text-red-400 text-xs">{formErrors.email}</p>
+              )}
+            </div>
+
+            {/* Phone Field */}
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-zinc-300">
+                رقم الهاتف <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="+966 5X XXX XXXX"
+                  className={`pr-10 bg-white/5 border-white/10 focus:border-indigo-500/50 ${
+                    formErrors.phone ? 'border-red-500/50' : ''
+                  }`}
+                  dir="ltr"
+                  data-testid="add-user-phone"
+                />
+              </div>
+              {formErrors.phone && (
+                <p className="text-red-400 text-xs">{formErrors.phone}</p>
+              )}
+            </div>
+
+            {/* Status Field */}
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-zinc-300">
+                حالة الحساب
+              </Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleInputChange('status', value)}
+              >
+                <SelectTrigger className="bg-white/5 border-white/10" data-testid="add-user-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181b] border-white/10">
+                  <SelectItem value="active" className="text-emerald-400 focus:bg-white/5 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      نشط
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="inactive" className="text-zinc-400 focus:bg-white/5 cursor-pointer">
+                    غير نشط
+                  </SelectItem>
+                  <SelectItem value="blocked" className="text-red-400 focus:bg-white/5 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <Ban className="w-4 h-4" />
+                      محظور
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 mt-6">
+            <Button
+              variant="outline"
+              onClick={handleCloseAddDialog}
+              className="border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300"
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleAddUser}
+              disabled={isSubmitting}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white"
+              data-testid="submit-add-user"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الإضافة...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4 ml-2" />
+                  إضافة المستخدم
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
