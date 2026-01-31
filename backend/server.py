@@ -1061,31 +1061,214 @@ async def mark_message_read(message_id: str):
     return {"success": True}
 
 @chat_router.delete("/messages/{message_id}")
-async def delete_message(message_id: str):
-    """حذف رسالة"""
-    result = await db.messages.delete_one({"id": message_id})
-    if result.deleted_count == 0:
+async def delete_message(message_id: str, deleted_by: str = "unknown"):
+    """حذف رسالة ونقلها لسلة المهملات"""
+    # جلب الرسالة قبل الحذف
+    message = await db.messages.find_one({"id": message_id}, {"_id": 0})
+    if not message:
         raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
-    return {"success": True}
+    
+    # نقل الرسالة لسلة المهملات
+    deleted_message = {
+        "id": str(uuid.uuid4()),
+        "originalMessageId": message.get("id"),
+        "conversationId": message.get("conversationId"),
+        "senderId": message.get("senderId"),
+        "senderName": message.get("senderName"),
+        "content": message.get("content"),
+        "type": message.get("type", "text"),
+        "fileUrl": message.get("fileUrl"),
+        "fileName": message.get("fileName"),
+        "deletedBy": deleted_by,
+        "deletedAt": datetime.now(timezone.utc).isoformat(),
+        "expiresAt": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+        "status": "deleted"
+    }
+    await db.deleted_messages.insert_one(deleted_message)
+    
+    # حذف الرسالة الأصلية
+    await db.messages.delete_one({"id": message_id})
+    return {"success": True, "canRestore": True, "expiresIn": "30 days"}
 
 @chat_router.delete("/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
-    """حذف محادثة وكل رسائلها"""
+async def delete_conversation(conversation_id: str, deleted_by: str = "unknown"):
+    """حذف محادثة ونقل رسائلها لسلة المهملات"""
+    # جلب كل الرسائل قبل الحذف
+    messages = await db.messages.find({"conversationId": conversation_id}, {"_id": 0}).to_list(10000)
+    
+    # نقل الرسائل لسلة المهملات
+    for message in messages:
+        deleted_message = {
+            "id": str(uuid.uuid4()),
+            "originalMessageId": message.get("id"),
+            "conversationId": message.get("conversationId"),
+            "senderId": message.get("senderId"),
+            "senderName": message.get("senderName"),
+            "content": message.get("content"),
+            "type": message.get("type", "text"),
+            "fileUrl": message.get("fileUrl"),
+            "fileName": message.get("fileName"),
+            "deletedBy": deleted_by,
+            "deletedAt": datetime.now(timezone.utc).isoformat(),
+            "expiresAt": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+            "status": "deleted"
+        }
+        await db.deleted_messages.insert_one(deleted_message)
+    
+    # حذف الرسائل والمحادثة
     await db.messages.delete_many({"conversationId": conversation_id})
     result = await db.conversations.delete_one({"id": conversation_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="المحادثة غير موجودة")
-    return {"success": True}
+    return {"success": True, "deletedMessages": len(messages), "canRestore": True}
 
 @chat_router.delete("/conversations/{conversation_id}/messages")
-async def clear_conversation_history(conversation_id: str):
-    """مسح سجل المحادثة (حذف كل الرسائل مع الإبقاء على المحادثة)"""
+async def clear_conversation_history(conversation_id: str, deleted_by: str = "unknown"):
+    """مسح سجل المحادثة ونقل الرسائل لسلة المهملات"""
+    # جلب كل الرسائل قبل الحذف
+    messages = await db.messages.find({"conversationId": conversation_id}, {"_id": 0}).to_list(10000)
+    
+    # نقل الرسائل لسلة المهملات
+    for message in messages:
+        deleted_message = {
+            "id": str(uuid.uuid4()),
+            "originalMessageId": message.get("id"),
+            "conversationId": message.get("conversationId"),
+            "senderId": message.get("senderId"),
+            "senderName": message.get("senderName"),
+            "content": message.get("content"),
+            "type": message.get("type", "text"),
+            "fileUrl": message.get("fileUrl"),
+            "fileName": message.get("fileName"),
+            "deletedBy": deleted_by,
+            "deletedAt": datetime.now(timezone.utc).isoformat(),
+            "expiresAt": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+            "status": "deleted"
+        }
+        await db.deleted_messages.insert_one(deleted_message)
+    
+    # حذف الرسائل
     result = await db.messages.delete_many({"conversationId": conversation_id})
     # تحديث المحادثة لإزالة آخر رسالة
     await db.conversations.update_one(
         {"id": conversation_id},
         {"$set": {"lastMessage": None, "lastMessageAt": None}}
     )
+    return {"success": True, "deleted_count": result.deleted_count, "canRestore": True}
+
+# ============== TRASH / RESTORE ROUTES ==============
+
+@chat_router.get("/trash")
+async def get_deleted_messages(payload: dict = Depends(verify_token)):
+    """جلب الرسائل المحذوفة (للمدير فقط)"""
+    deleted = await db.deleted_messages.find(
+        {"status": {"$in": ["deleted", "restore_requested"]}},
+        {"_id": 0}
+    ).sort("deletedAt", -1).to_list(1000)
+    return deleted
+
+@chat_router.get("/trash/requests")
+async def get_restore_requests(payload: dict = Depends(verify_token)):
+    """جلب طلبات الاستعادة المعلقة (للمدير فقط)"""
+    requests = await db.deleted_messages.find(
+        {"status": "restore_requested"},
+        {"_id": 0}
+    ).sort("restoreRequestedAt", -1).to_list(100)
+    return requests
+
+@chat_router.post("/trash/request-restore")
+async def request_restore(data: RestoreRequest):
+    """طلب استعادة رسالة محذوفة"""
+    # التحقق من وجود الرسالة في سلة المهملات
+    deleted_msg = await db.deleted_messages.find_one(
+        {"originalMessageId": data.messageId, "status": "deleted"},
+        {"_id": 0}
+    )
+    if not deleted_msg:
+        raise HTTPException(status_code=404, detail="الرسالة غير موجودة في سلة المهملات")
+    
+    # التحقق من أن الرسالة لم تنتهي صلاحيتها
+    expires_at = datetime.fromisoformat(deleted_msg.get("expiresAt").replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="انتهت صلاحية الرسالة ولا يمكن استعادتها")
+    
+    # تحديث حالة الرسالة لطلب الاستعادة
+    await db.deleted_messages.update_one(
+        {"originalMessageId": data.messageId},
+        {"$set": {
+            "status": "restore_requested",
+            "restoreRequestedBy": data.requestedBy,
+            "restoreRequestedAt": datetime.now(timezone.utc).isoformat(),
+            "restoreReason": data.reason
+        }}
+    )
+    
+    return {"success": True, "message": "تم إرسال طلب الاستعادة للمدير"}
+
+@chat_router.post("/trash/approve-restore/{message_id}")
+async def approve_restore(message_id: str, payload: dict = Depends(verify_token)):
+    """موافقة المدير على استعادة رسالة (للمدير فقط)"""
+    # جلب الرسالة المحذوفة
+    deleted_msg = await db.deleted_messages.find_one(
+        {"originalMessageId": message_id, "status": "restore_requested"},
+        {"_id": 0}
+    )
+    if not deleted_msg:
+        raise HTTPException(status_code=404, detail="طلب الاستعادة غير موجود")
+    
+    # استعادة الرسالة للمحادثة الأصلية
+    restored_message = {
+        "id": deleted_msg.get("originalMessageId"),
+        "conversationId": deleted_msg.get("conversationId"),
+        "senderId": deleted_msg.get("senderId"),
+        "senderName": deleted_msg.get("senderName"),
+        "content": deleted_msg.get("content"),
+        "type": deleted_msg.get("type", "text"),
+        "fileUrl": deleted_msg.get("fileUrl"),
+        "fileName": deleted_msg.get("fileName"),
+        "read": True,
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "restored": True,
+        "restoredAt": datetime.now(timezone.utc).isoformat()
+    }
+    await db.messages.insert_one(restored_message)
+    
+    # تحديث حالة الرسالة في سلة المهملات
+    await db.deleted_messages.update_one(
+        {"originalMessageId": message_id},
+        {"$set": {"status": "restored", "restoredAt": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"success": True, "message": "تم استعادة الرسالة بنجاح"}
+
+@chat_router.post("/trash/reject-restore/{message_id}")
+async def reject_restore(message_id: str, payload: dict = Depends(verify_token)):
+    """رفض المدير لطلب الاستعادة"""
+    result = await db.deleted_messages.update_one(
+        {"originalMessageId": message_id, "status": "restore_requested"},
+        {"$set": {"status": "deleted", "restoreRequestedBy": None, "restoreRequestedAt": None}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="طلب الاستعادة غير موجود")
+    
+    return {"success": True, "message": "تم رفض طلب الاستعادة"}
+
+@chat_router.delete("/trash/permanent/{message_id}")
+async def permanent_delete(message_id: str, payload: dict = Depends(verify_token)):
+    """حذف نهائي من سلة المهملات (للمدير فقط)"""
+    result = await db.deleted_messages.delete_one({"originalMessageId": message_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+    return {"success": True, "message": "تم الحذف النهائي"}
+
+@chat_router.delete("/trash/cleanup")
+async def cleanup_expired_messages(payload: dict = Depends(verify_token)):
+    """حذف الرسائل منتهية الصلاحية (أكثر من 30 يوم)"""
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.deleted_messages.delete_many({
+        "expiresAt": {"$lt": now},
+        "status": {"$in": ["deleted", "restore_requested"]}
+    })
     return {"success": True, "deleted_count": result.deleted_count}
 
 # ============== BACKUP ROUTES ==============
