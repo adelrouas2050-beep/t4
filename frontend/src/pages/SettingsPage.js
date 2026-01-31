@@ -526,6 +526,11 @@ const SettingsPage = () => {
               </div>
               <span className="text-red-400 flex-1 text-right">{t('حذف الحساب', 'Delete Account')}</span>
             </button>
+            
+            {/* Footer */}
+            <div className={`text-center py-6 mt-4 ${isDarkMode ? 'text-[#6c7883]' : 'text-gray-400'} text-sm`}>
+              Made with <span className={`${isDarkMode ? 'text-[#5288c1]' : 'text-blue-500'} font-medium`}>émergent</span>
+            </div>
           </div>
         )}
       </div>
