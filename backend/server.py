@@ -1053,6 +1053,17 @@ async def delete_conversation(conversation_id: str):
         raise HTTPException(status_code=404, detail="المحادثة غير موجودة")
     return {"success": True}
 
+@chat_router.delete("/conversations/{conversation_id}/messages")
+async def clear_conversation_history(conversation_id: str):
+    """مسح سجل المحادثة (حذف كل الرسائل مع الإبقاء على المحادثة)"""
+    result = await db.messages.delete_many({"conversationId": conversation_id})
+    # تحديث المحادثة لإزالة آخر رسالة
+    await db.conversations.update_one(
+        {"id": conversation_id},
+        {"$set": {"lastMessage": None, "lastMessageAt": None}}
+    )
+    return {"success": True, "deleted_count": result.deleted_count}
+
 # ============== BACKUP ROUTES ==============
 
 async def perform_backup(backup_type: str = "manual") -> BackupInfo:
