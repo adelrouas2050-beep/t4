@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -26,6 +27,7 @@ const menuItems = [
   { path: '/admin/rides', icon: MapPin, label: 'الرحلات' },
   { path: '/admin/orders', icon: ShoppingBag, label: 'الطلبات' },
   { path: '/admin/promotions', icon: Ticket, label: 'العروض' },
+  { path: '/admin/trash', icon: Trash2, label: 'سلة المهملات' },
   { path: '/admin/settings', icon: Settings, label: 'الإعدادات' },
 ];
 
