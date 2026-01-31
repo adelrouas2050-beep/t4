@@ -452,6 +452,9 @@ export default function Users() {
                         />
                         <div>
                           <p className="font-medium text-white">{user.name}</p>
+                          {user.username && (
+                            <p className="text-xs text-indigo-400">@{user.username}</p>
+                          )}
                           <p className="text-xs text-zinc-500">{user.email}</p>
                           <Badge className={`${statusColors[user.status]} border mt-1 text-[10px]`}>
                             {statusLabels[user.status]}
