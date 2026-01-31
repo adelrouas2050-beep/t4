@@ -66,7 +66,9 @@ import {
   Calendar,
   MapPin,
   ShoppingBag,
-  UserPlus
+  UserPlus,
+  Pencil,
+  Key
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
