@@ -59,6 +59,37 @@ class AdminLogin(BaseModel):
     email: str
     password: str
 
+# ============== REGISTRATION MODELS ==============
+
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    userId: str  # اسم المستخدم الفريد
+    phone: Optional[str] = ""
+    password: str
+    userType: str = "rider"  # rider or driver
+
+class RegisteredUser(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    userId: str  # اسم المستخدم كمعرف رئيسي
+    name: str
+    email: str
+    phone: str = ""
+    password: str  # مشفرة
+    userType: str = "rider"
+    createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    userType: str = "rider"
+
+class LoginResponse(BaseModel):
+    success: bool
+    user: Optional[dict] = None
+    token: Optional[str] = None
+    message: Optional[str] = None
+
 class AdminResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
