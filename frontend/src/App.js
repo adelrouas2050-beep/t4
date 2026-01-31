@@ -23,6 +23,9 @@ import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import CartPage from './pages/CartPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/SettingsPage';
+import CreateChannelPage from './pages/CreateChannelPage';
+import CreateGroupPage from './pages/CreateGroupPage';
 
 // New Admin Panel Pages
 import { Layout } from './components/Layout';
