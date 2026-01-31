@@ -393,11 +393,44 @@ export const AdvancedChatProvider = ({ children }) => {
     ));
   };
 
-  const deleteConversation = (conversationId) => {
+  const deleteConversation = async (conversationId) => {
+    // حذف من قاعدة البيانات
+    try {
+      await fetch(`${API_URL}/api/chat/conversations/${conversationId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error deleting conversation from database:', error);
+    }
+    
     setConversations(conversations.filter(conv => conv.id !== conversationId));
     const newMessages = { ...messages };
     delete newMessages[conversationId];
     setMessages(newMessages);
+  };
+
+  const clearConversationHistory = async (conversationId) => {
+    // مسح السجل من قاعدة البيانات
+    try {
+      await fetch(`${API_URL}/api/chat/conversations/${conversationId}/messages`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error clearing conversation history:', error);
+    }
+    
+    // مسح الرسائل محلياً
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: []
+    }));
+    
+    // تحديث المحادثة لإزالة آخر رسالة
+    setConversations(conversations.map(conv => 
+      conv.id === conversationId 
+        ? { ...conv, lastMessage: null } 
+        : conv
+    ));
   };
 
   const editMessage = (conversationId, messageId, newText, newTextEn) => {
