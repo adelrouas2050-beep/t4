@@ -132,12 +132,25 @@ export default function Users() {
   const validateForm = () => {
     const errors = {};
     
+    // Username validation (required)
+    if (!formData.username.trim()) {
+      errors.username = 'اسم المستخدم مطلوب';
+    } else if (formData.username.trim().length < 3) {
+      errors.username = 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      errors.username = 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط';
+    } else if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase())) {
+      errors.username = 'اسم المستخدم مستخدم بالفعل';
+    }
+    
+    // Name validation (required)
     if (!formData.name.trim()) {
-      errors.name = 'الاسم مطلوب';
+      errors.name = 'الاسم الكامل مطلوب';
     } else if (formData.name.trim().length < 3) {
       errors.name = 'الاسم يجب أن يكون 3 أحرف على الأقل';
     }
     
+    // Email validation (required)
     if (!formData.email.trim()) {
       errors.email = 'البريد الإلكتروني مطلوب';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -146,9 +159,8 @@ export default function Users() {
       errors.email = 'البريد الإلكتروني مستخدم بالفعل';
     }
     
-    if (!formData.phone.trim()) {
-      errors.phone = 'رقم الهاتف مطلوب';
-    } else if (!/^[\d+\-\s]{8,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+    // Phone validation (optional - only validate if provided)
+    if (formData.phone.trim() && !/^[\d+\-\s]{8,15}$/.test(formData.phone.replace(/\s/g, ''))) {
       errors.phone = 'رقم الهاتف غير صحيح';
     }
     
