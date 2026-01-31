@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = (email, password, type = 'rider') => {
+  const login = async (email, password, type = 'rider') => {
     // Validate inputs
     if (!email || !password) {
       return { success: false, error: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور', errorEn: 'Please enter email and password' };
@@ -109,36 +109,75 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // Check if user exists in registered users
-    const foundUser = REGISTERED_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-    
-    if (!foundUser) {
-      // User not found
-      return { success: false, error: 'البريد الإلكتروني غير مسجل', errorEn: 'Email not registered' };
+    // Try to login via API for registered users in database
+    try {
+      const response = await fetch(`${API_URL}/api/auth/user-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          userType: type
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const loggedInUser = {
+          id: data.user.userId,
+          userId: data.user.userId,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone
+        };
+
+        setUser(loggedInUser);
+        setIsAuthenticated(true);
+        setUserType(data.user.userType || type);
+        setIsAdmin(false);
+        localStorage.setItem('user', JSON.stringify(loggedInUser));
+        localStorage.setItem('userType', data.user.userType || type);
+        localStorage.setItem('isAdmin', 'false');
+        localStorage.setItem('userToken', data.token);
+        return { success: true, isAdmin: false };
+      }
+
+      // If API returns error, return it
+      return { success: false, error: data.detail || 'فشل تسجيل الدخول', errorEn: data.detail || 'Login failed' };
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      // Fallback to mock users if API fails
+      const foundUser = REGISTERED_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!foundUser) {
+        return { success: false, error: 'البريد الإلكتروني غير مسجل', errorEn: 'Email not registered' };
+      }
+
+      if (foundUser.password !== password) {
+        return { success: false, error: 'كلمة المرور غير صحيحة', errorEn: 'Incorrect password' };
+      }
+
+      const loggedInUser = {
+        id: foundUser.id,
+        name: foundUser.name,
+        nameEn: foundUser.nameEn,
+        email: foundUser.email,
+        phone: foundUser.phone
+      };
+
+      setUser(loggedInUser);
+      setIsAuthenticated(true);
+      setUserType(foundUser.type || type);
+      setIsAdmin(false);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      localStorage.setItem('userType', foundUser.type || type);
+      localStorage.setItem('isAdmin', 'false');
+      return { success: true, isAdmin: false };
     }
-
-    if (foundUser.password !== password) {
-      // Wrong password
-      return { success: false, error: 'كلمة المرور غير صحيحة', errorEn: 'Incorrect password' };
-    }
-
-    // Successful login
-    const loggedInUser = {
-      id: foundUser.id,
-      name: foundUser.name,
-      nameEn: foundUser.nameEn,
-      email: foundUser.email,
-      phone: foundUser.phone
-    };
-
-    setUser(loggedInUser);
-    setIsAuthenticated(true);
-    setUserType(foundUser.type || type);
-    setIsAdmin(false);
-    localStorage.setItem('user', JSON.stringify(loggedInUser));
-    localStorage.setItem('userType', foundUser.type || type);
-    localStorage.setItem('isAdmin', 'false');
-    return { success: true, isAdmin: false };
   };
 
   const register = async (userData, type = 'rider') => {
