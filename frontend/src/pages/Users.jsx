@@ -537,10 +537,10 @@ export default function Users() {
                   <TableHeader>
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="table-header text-right">المستخدم</TableHead>
+                      <TableHead className="table-header text-right">المستخدم</TableHead>
+                      <TableHead className="table-header text-right">اسم المستخدم</TableHead>
                       <TableHead className="table-header text-right">الهاتف</TableHead>
                       <TableHead className="table-header text-right">الرحلات</TableHead>
-                      <TableHead className="table-header text-right">الطلبات</TableHead>
-                      <TableHead className="table-header text-right">تاريخ الانضمام</TableHead>
                       <TableHead className="table-header text-right">الحالة</TableHead>
                       <TableHead className="table-header text-right">إجراءات</TableHead>
                     </TableRow>
@@ -565,10 +565,11 @@ export default function Users() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-zinc-300 font-mono text-sm">{user.phone}</TableCell>
+                        <TableCell className="text-indigo-400 font-mono text-sm">
+                          {user.username ? `@${user.username}` : '-'}
+                        </TableCell>
+                        <TableCell className="text-zinc-300 font-mono text-sm">{user.phone || '-'}</TableCell>
                         <TableCell className="text-zinc-300">{user.rides}</TableCell>
-                        <TableCell className="text-zinc-300">{user.orders}</TableCell>
-                        <TableCell className="text-zinc-500 text-sm">{user.joined}</TableCell>
                         <TableCell>
                           <Badge className={`${statusColors[user.status]} border`}>
                             {statusLabels[user.status]}
