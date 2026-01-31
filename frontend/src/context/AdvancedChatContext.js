@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockConversations, mockMessages, mockUsers, mockGroups, mockStickers, mockGifs, mockStories, mockCloudFiles } from '../mock/advancedChatData';
 import { useAuth } from './AuthContext';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const AdvancedChatContext = createContext();
 
 export const useAdvancedChat = () => {
