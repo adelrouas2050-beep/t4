@@ -109,6 +109,7 @@ class User(BaseModel):
     orders: int = 0
     joined: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime('%Y-%m-%d'))
     avatar: str = ""
+    username: Optional[str] = ""
 
 class UserCreate(BaseModel):
     name: str
