@@ -1282,12 +1282,12 @@ const ChatPage = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#232e3c]" />
               <DropdownMenuItem 
-                onClick={() => { setShowNewMenu(false); setShowDeletedMessages(true); fetchMyDeletedMessages(); }}
+                onClick={() => { setShowNewMenu(false); setShowDeletedMessages(true); fetchMyDeletedConversations(); }}
                 className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
-                data-testid="my-deleted-messages"
+                data-testid="my-deleted-conversations"
               >
                 <Trash2 className="w-5 h-5 text-red-400" />
-                {t('رسائلي المحذوفة', 'My Deleted Messages')}
+                {t('محادثاتي المحذوفة', 'My Deleted Conversations')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
