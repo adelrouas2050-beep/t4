@@ -98,14 +98,21 @@ export const AdvancedChatProvider = ({ children }) => {
     return [];
   };
 
-  const getOrCreateConversation = (otherUserId) => {
+  const getOrCreateConversation = (otherUserId, otherUserData = null) => {
     const existingConv = conversations.find(conv => 
       conv.type === 'private' && conv.participants.includes(otherUserId)
     );
 
     if (existingConv) return existingConv;
 
-    const otherUser = mockUsers.find(u => u.id === otherUserId);
+    // البحث في mock users أولاً
+    let otherUser = mockUsers.find(u => u.id === otherUserId || u.userId === otherUserId);
+    
+    // إذا لم يوجد في mock، استخدم البيانات المرسلة
+    if (!otherUser && otherUserData) {
+      otherUser = otherUserData;
+    }
+    
     if (!otherUser) return null;
 
     const newConv = {
