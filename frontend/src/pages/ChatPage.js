@@ -1215,7 +1215,8 @@ const ChatPage = () => {
               style={getBackgroundStyle()}
             >
               {filteredMessages.map((msg, index) => {
-                const isOwn = msg.senderId === 'user1';
+                const currentUserId = user?.userId || user?.id || 'user1';
+                const isOwn = msg.senderId === currentUserId;
                 const showAvatar = index === 0 || filteredMessages[index - 1].senderId !== msg.senderId;
                 const isLastInGroup = index === filteredMessages.length - 1 || filteredMessages[index + 1]?.senderId !== msg.senderId;
                 const isSelected = selectedMessages.includes(msg.id);
