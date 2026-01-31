@@ -15,6 +15,37 @@ export const useAuth = () => {
 const ADMIN_EMAIL = 'admin@transfers.com';
 const ADMIN_PASSWORD = 'admin123';
 
+// Registered users database (mock)
+const REGISTERED_USERS = [
+  {
+    id: 'user_1',
+    email: 'rider@transfers.com',
+    password: 'rider123',
+    name: 'محمد أحمد',
+    nameEn: 'Mohammed Ahmed',
+    phone: '+966501234567',
+    type: 'rider'
+  },
+  {
+    id: 'user_2',
+    email: 'driver@transfers.com',
+    password: 'driver123',
+    name: 'أحمد السائق',
+    nameEn: 'Ahmed Driver',
+    phone: '+966502345678',
+    type: 'driver'
+  },
+  {
+    id: 'user_3',
+    email: 'test@test.com',
+    password: 'test123',
+    name: 'مستخدم تجريبي',
+    nameEn: 'Test User',
+    phone: '+966503456789',
+    type: 'rider'
+  }
+];
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -37,6 +68,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (email, password, type = 'rider') => {
+    // Validate inputs
+    if (!email || !password) {
+      return { success: false, error: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور', errorEn: 'Please enter email and password' };
+    }
+
     // Check if admin login
     if (email === ADMIN_EMAIL) {
       if (password === ADMIN_PASSWORD) {
@@ -62,18 +98,34 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // Regular user login - for demo, accept any email/password
-    // In real app, this would validate against backend
-    if (!email || !password) {
-      return { success: false, error: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور', errorEn: 'Please enter email and password' };
+    // Check if user exists in registered users
+    const foundUser = REGISTERED_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    if (!foundUser) {
+      // User not found
+      return { success: false, error: 'البريد الإلكتروني غير مسجل', errorEn: 'Email not registered' };
     }
 
-    setUser(mockUser);
+    if (foundUser.password !== password) {
+      // Wrong password
+      return { success: false, error: 'كلمة المرور غير صحيحة', errorEn: 'Incorrect password' };
+    }
+
+    // Successful login
+    const loggedInUser = {
+      id: foundUser.id,
+      name: foundUser.name,
+      nameEn: foundUser.nameEn,
+      email: foundUser.email,
+      phone: foundUser.phone
+    };
+
+    setUser(loggedInUser);
     setIsAuthenticated(true);
-    setUserType(type);
+    setUserType(foundUser.type || type);
     setIsAdmin(false);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    localStorage.setItem('userType', type);
+    localStorage.setItem('user', JSON.stringify(loggedInUser));
+    localStorage.setItem('userType', foundUser.type || type);
     localStorage.setItem('isAdmin', 'false');
     return { success: true, isAdmin: false };
   };
