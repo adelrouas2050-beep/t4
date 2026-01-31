@@ -1887,19 +1887,19 @@ const ChatPage = () => {
                   </DialogContent>
                 </Dialog>
 
-                {/* Dialog: My Deleted Messages */}
+                {/* Dialog: My Deleted Conversations */}
                 <Dialog open={showDeletedMessages} onOpenChange={setShowDeletedMessages}>
                   <DialogContent className="bg-[#17212b] border-[#232e3c] text-white max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                       <DialogTitle className="text-white flex items-center gap-2">
                         <Trash2 className="w-5 h-5 text-red-400" />
-                        {t('رسائلي المحذوفة', 'My Deleted Messages')}
+                        {t('محادثاتي المحذوفة', 'My Deleted Conversations')}
                       </DialogTitle>
                     </DialogHeader>
                     
                     <p className="text-[#8b9eb0] text-sm mb-4">
-                      {t('يمكنك طلب استعادة الرسائل المحذوفة خلال 30 يوم. سيتم مراجعة طلبك من قبل المدير.', 
-                         'You can request to restore deleted messages within 30 days. Your request will be reviewed by admin.')}
+                      {t('يمكنك طلب استعادة المحادثات المحذوفة خلال 30 يوم. سيتم مراجعة طلبك من قبل المدير.', 
+                         'You can request to restore deleted conversations within 30 days. Your request will be reviewed by admin.')}
                     </p>
                     
                     <div className="flex-1 overflow-y-auto space-y-3 max-h-[400px]">
@@ -1909,62 +1909,61 @@ const ChatPage = () => {
                         </div>
                       ) : myDeletedMessages.length === 0 ? (
                         <div className="text-center py-8">
-                          <Trash2 className="w-12 h-12 mx-auto text-[#3a4a5c] mb-3" />
-                          <p className="text-[#8b9eb0]">{t('لا توجد رسائل محذوفة', 'No deleted messages')}</p>
+                          <MessageSquare className="w-12 h-12 mx-auto text-[#3a4a5c] mb-3" />
+                          <p className="text-[#8b9eb0]">{t('لا توجد محادثات محذوفة', 'No deleted conversations')}</p>
                         </div>
                       ) : (
-                        myDeletedMessages.map((msg) => (
+                        myDeletedMessages.map((conv) => (
                           <div 
-                            key={msg.id} 
-                            className="bg-[#242f3d] rounded-lg p-3 border border-[#2d3a4a]"
+                            key={conv.id} 
+                            className="bg-[#242f3d] rounded-lg p-4 border border-[#2d3a4a]"
                           >
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-[#5288c1]/20 flex items-center justify-center">
-                                  <User className="w-4 h-4 text-[#5288c1]" />
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5288c1] to-[#7a5fca] flex items-center justify-center">
+                                  <User className="w-6 h-6 text-white" />
                                 </div>
-                                <span className="text-white text-sm font-medium">{msg.senderName}</span>
+                                <div>
+                                  <span className="text-white font-medium block">{conv.otherUserName || conv.name || t('محادثة', 'Conversation')}</span>
+                                  <span className="text-[#6c7883] text-xs">{conv.messagesCount} {t('رسالة', 'messages')}</span>
+                                </div>
                               </div>
                               <span className={`text-xs px-2 py-1 rounded ${
-                                msg.status === 'restore_requested' ? 'bg-yellow-500/20 text-yellow-400' :
-                                msg.status === 'restored' ? 'bg-green-500/20 text-green-400' :
-                                msg.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                conv.status === 'restore_requested' ? 'bg-yellow-500/20 text-yellow-400' :
+                                conv.status === 'restored' ? 'bg-green-500/20 text-green-400' :
                                 'bg-[#3a4a5c] text-[#8b9eb0]'
                               }`}>
-                                {msg.status === 'restore_requested' ? t('قيد المراجعة', 'Pending') :
-                                 msg.status === 'restored' ? t('تم الاستعادة', 'Restored') :
-                                 msg.status === 'rejected' ? t('مرفوض', 'Rejected') :
+                                {conv.status === 'restore_requested' ? t('قيد المراجعة', 'Pending') :
+                                 conv.status === 'restored' ? t('تم الاستعادة', 'Restored') :
                                  t('محذوفة', 'Deleted')}
                               </span>
                             </div>
                             
-                            <p className="text-[#c4ccd4] text-sm mb-2 line-clamp-2">{msg.content}</p>
-                            
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 text-xs text-[#6c7883]">
                                 <Clock className="w-3 h-3" />
-                                <span>{t('متبقي', 'Remaining')}: {getRemainingDays(msg.expiresAt)} {t('يوم', 'days')}</span>
+                                <span>{t('متبقي', 'Remaining')}: {getRemainingDays(conv.expiresAt)} {t('يوم', 'days')}</span>
                               </div>
                               
-                              {msg.status === 'deleted' && (
+                              {conv.status === 'deleted' && (
                                 <Button
                                   size="sm"
                                   onClick={() => {
                                     const reason = prompt(t('سبب طلب الاستعادة (اختياري):', 'Reason for restore request (optional):'));
-                                    requestRestore(msg.originalMessageId, reason || '');
+                                    requestConversationRestore(conv.originalConversationId, reason || '');
                                   }}
-                                  className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white text-xs h-7"
-                                  data-testid={`request-restore-${msg.originalMessageId}`}
+                                  className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white text-xs h-8"
+                                  data-testid={`request-restore-${conv.originalConversationId}`}
                                 >
                                   <RotateCcw className="w-3 h-3 ml-1" />
                                   {t('طلب استعادة', 'Request Restore')}
                                 </Button>
                               )}
                               
-                              {msg.status === 'restore_requested' && (
+                              {conv.status === 'restore_requested' && (
                                 <span className="text-yellow-400 text-xs flex items-center gap-1">
                                   <AlertCircle className="w-3 h-3" />
-                                  {t('في انتظار موافقة المدير', 'Waiting for admin approval')}
+                                  {t('في انتظار موافقة المدير', 'Waiting for admin')}
                                 </span>
                               )}
                             </div>
@@ -1976,7 +1975,7 @@ const ChatPage = () => {
                     <div className="mt-4 pt-3 border-t border-[#232e3c]">
                       <p className="text-xs text-[#6c7883] flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
-                        {t('الرسائل تُحذف نهائياً بعد 30 يوم من الحذف', 'Messages are permanently deleted after 30 days')}
+                        {t('المحادثات تُحذف نهائياً بعد 30 يوم من الحذف', 'Conversations are permanently deleted after 30 days')}
                       </p>
                     </div>
                   </DialogContent>
