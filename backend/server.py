@@ -912,6 +912,99 @@ async def seed_database():
 async def root():
     return {"message": "Transfers Admin API", "version": "1.0.0"}
 
+# ============== CHAT ROUTES ==============
+
+@chat_router.get("/conversations/{user_id}")
+async def get_user_conversations(user_id: str):
+    """جلب محادثات المستخدم"""
+    conversations = await db.conversations.find(
+        {"participants": user_id},
+        {"_id": 0}
+    ).sort("lastMessageAt", -1).to_list(100)
+    return conversations
+
+@chat_router.post("/conversations")
+async def create_conversation(data: ConversationCreate):
+    """إنشاء محادثة جديدة"""
+    # التحقق من عدم وجود محادثة خاصة بين نفس المشاركين
+    if data.type == "private" and len(data.participants) == 2:
+        existing = await db.conversations.find_one({
+            "type": "private",
+            "participants": {"$all": data.participants}
+        }, {"_id": 0})
+        if existing:
+            return existing
+    
+    new_conv = Conversation(
+        type=data.type,
+        name=data.name,
+        participants=data.participants,
+        createdBy=data.createdBy
+    )
+    await db.conversations.insert_one(new_conv.model_dump())
+    return new_conv.model_dump()
+
+@chat_router.get("/messages/{conversation_id}")
+async def get_conversation_messages(conversation_id: str, limit: int = 50, skip: int = 0):
+    """جلب رسائل المحادثة"""
+    messages = await db.messages.find(
+        {"conversationId": conversation_id},
+        {"_id": 0}
+    ).sort("createdAt", -1).skip(skip).limit(limit).to_list(limit)
+    return messages[::-1]  # عكس الترتيب ليكون من الأقدم للأحدث
+
+@chat_router.post("/messages")
+async def send_message(data: MessageCreate):
+    """إرسال رسالة"""
+    new_message = Message(
+        conversationId=data.conversationId,
+        senderId=data.senderId,
+        senderName=data.senderName,
+        content=data.content,
+        type=data.type,
+        fileUrl=data.fileUrl,
+        fileName=data.fileName,
+        replyTo=data.replyTo
+    )
+    await db.messages.insert_one(new_message.model_dump())
+    
+    # تحديث آخر رسالة في المحادثة
+    await db.conversations.update_one(
+        {"id": data.conversationId},
+        {"$set": {
+            "lastMessage": data.content[:50],
+            "lastMessageAt": new_message.createdAt
+        }}
+    )
+    
+    return new_message.model_dump()
+
+@chat_router.put("/messages/{message_id}/read")
+async def mark_message_read(message_id: str):
+    """تحديد الرسالة كمقروءة"""
+    await db.messages.update_one(
+        {"id": message_id},
+        {"$set": {"read": True}}
+    )
+    return {"success": True}
+
+@chat_router.delete("/messages/{message_id}")
+async def delete_message(message_id: str):
+    """حذف رسالة"""
+    result = await db.messages.delete_one({"id": message_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+    return {"success": True}
+
+@chat_router.delete("/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """حذف محادثة وكل رسائلها"""
+    await db.messages.delete_many({"conversationId": conversation_id})
+    result = await db.conversations.delete_one({"id": conversation_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="المحادثة غير موجودة")
+    return {"success": True}
+
 # ============== BACKUP ROUTES ==============
 
 async def perform_backup(backup_type: str = "manual") -> BackupInfo:
