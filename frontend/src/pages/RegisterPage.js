@@ -61,7 +61,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const result = register(formData, userType);
+      const result = await register(formData, userType);
       if (result.success) {
         toast({
           title: t('تم التسجيل بنجاح', 'Registration Successful'),
@@ -72,6 +72,12 @@ const RegisterPage = () => {
         } else {
           navigate('/rider');
         }
+      } else {
+        toast({
+          title: t('خطأ', 'Error'),
+          description: result.error || t('فشل التسجيل', 'Registration failed'),
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       toast({
