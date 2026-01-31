@@ -788,7 +788,7 @@ export default function Users() {
 
       {/* Add User Dialog */}
       <Dialog open={showAddUserDialog} onOpenChange={handleCloseAddDialog}>
-        <DialogContent className="bg-[#18181b] border-white/10 text-white max-w-md">
+        <DialogContent className="bg-[#18181b] border-white/10 text-white max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <UserPlus className="w-5 h-5 text-indigo-400" />
@@ -800,7 +800,33 @@ export default function Users() {
           </DialogHeader>
           
           <div className="space-y-4 mt-4">
-            {/* Name Field */}
+            {/* Username Field (Required) */}
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-zinc-300">
+                اسم المستخدم <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500">@</span>
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange('username', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                  placeholder="username"
+                  className={`pr-10 bg-white/5 border-white/10 focus:border-indigo-500/50 ${
+                    formErrors.username ? 'border-red-500/50' : ''
+                  }`}
+                  dir="ltr"
+                  data-testid="add-user-username"
+                />
+              </div>
+              {formErrors.username ? (
+                <p className="text-red-400 text-xs">{formErrors.username}</p>
+              ) : (
+                <p className="text-zinc-500 text-xs">أحرف إنجليزية وأرقام و _ فقط</p>
+              )}
+            </div>
+
+            {/* Name Field (Required) */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-zinc-300">
                 الاسم الكامل <span className="text-red-400">*</span>
@@ -823,7 +849,7 @@ export default function Users() {
               )}
             </div>
 
-            {/* Email Field */}
+            {/* Email Field (Required) */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-zinc-300">
                 البريد الإلكتروني <span className="text-red-400">*</span>
@@ -848,10 +874,10 @@ export default function Users() {
               )}
             </div>
 
-            {/* Phone Field */}
+            {/* Phone Field (Optional) */}
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-zinc-300">
-                رقم الهاتف <span className="text-red-400">*</span>
+                رقم الهاتف <span className="text-zinc-500 text-xs">(اختياري)</span>
               </Label>
               <div className="relative">
                 <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
