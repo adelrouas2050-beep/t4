@@ -119,12 +119,20 @@ const ChatPage = () => {
   const [showCloudStorage, setShowCloudStorage] = useState(false);
   const [cloudFileType, setCloudFileType] = useState('all');
   
+  // Call state
+  const [activeCall, setActiveCall] = useState(null); // { type: 'voice' | 'video', status: 'calling' | 'connected' | 'ended', startTime: Date }
+  const [callDuration, setCallDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const storyImageInputRef = useRef(null);
   const longPressTimer = useRef(null);
   const storyTimerRef = useRef(null);
+  const callTimerRef = useRef(null);
   const MAX_PINNED = 5;
 
   // Tab definitions for Telegram-like navigation
