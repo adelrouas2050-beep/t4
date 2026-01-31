@@ -1158,6 +1158,33 @@ async def clear_conversation_history(conversation_id: str, deleted_by: str = "un
 
 # ============== TRASH / RESTORE ROUTES ==============
 
+@chat_router.get("/my-deleted-messages/{user_id}")
+async def get_user_deleted_messages(user_id: str):
+    """جلب الرسائل المحذوفة للمستخدم (رسائله التي حذفها أو حُذفت له)"""
+    deleted = await db.deleted_messages.find(
+        {
+            "$or": [
+                {"senderId": user_id},
+                {"deletedBy": user_id}
+            ],
+            "status": {"$in": ["deleted", "restore_requested", "rejected"]}
+        },
+        {"_id": 0}
+    ).sort("deletedAt", -1).to_list(100)
+    return deleted
+
+@chat_router.get("/my-restore-requests/{user_id}")
+async def get_user_restore_requests(user_id: str):
+    """جلب طلبات الاستعادة للمستخدم"""
+    requests = await db.deleted_messages.find(
+        {
+            "restoreRequestedBy": user_id,
+            "status": {"$in": ["restore_requested", "restored", "rejected"]}
+        },
+        {"_id": 0}
+    ).sort("restoreRequestedAt", -1).to_list(50)
+    return requests
+
 @chat_router.get("/trash")
 async def get_deleted_messages(payload: dict = Depends(verify_token)):
     """جلب الرسائل المحذوفة (للمدير فقط)"""
