@@ -149,6 +149,14 @@ const SettingsPage = () => {
     }
   ];
 
+  // Admin section (only if user is admin)
+  const adminSection = isAdmin ? {
+    id: 'admin',
+    icon: SettingsIcon,
+    title: t('لوحة التحكم', 'Admin Panel'),
+    color: 'text-indigo-400'
+  } : null;
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'notifications':
