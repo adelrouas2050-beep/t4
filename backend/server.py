@@ -269,11 +269,36 @@ class MessageCreate(BaseModel):
     fileName: Optional[str] = None
     replyTo: Optional[str] = None
 
-# نموذج الرسائل المحذوفة (سلة المهملات)
+# نموذج المحادثات المحذوفة (سلة المهملات)
+class DeletedConversation(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    originalConversationId: str
+    type: str = "private"
+    name: Optional[str] = None
+    participants: List[str]
+    otherUserName: Optional[str] = None  # اسم المستخدم الآخر (للمحادثات الخاصة)
+    otherUserId: Optional[str] = None
+    messagesCount: int = 0  # عدد الرسائل المحذوفة
+    deletedBy: str
+    deletedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    expiresAt: str = Field(default_factory=lambda: (datetime.now(timezone.utc) + timedelta(days=30)).isoformat())
+    restoreRequestedBy: Optional[str] = None
+    restoreRequestedAt: Optional[str] = None
+    restoreReason: Optional[str] = None
+    status: str = "deleted"  # deleted, restore_requested, restored, permanently_deleted
+
+class RestoreConversationRequest(BaseModel):
+    conversationId: str
+    requestedBy: str
+    reason: Optional[str] = None
+
+# نموذج الرسائل المحذوفة (للأرشيف)
 class DeletedMessage(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     originalMessageId: str
+    originalConversationId: str  # معرف المحادثة الأصلية
     conversationId: str
     senderId: str
     senderName: str
@@ -281,17 +306,9 @@ class DeletedMessage(BaseModel):
     type: str = "text"
     fileUrl: Optional[str] = None
     fileName: Optional[str] = None
-    deletedBy: str  # من قام بالحذف
+    deletedBy: str
     deletedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    expiresAt: str = Field(default_factory=lambda: (datetime.now(timezone.utc) + timedelta(days=30)).isoformat())
-    restoreRequestedBy: Optional[str] = None  # من طلب الاستعادة
-    restoreRequestedAt: Optional[str] = None
-    status: str = "deleted"  # deleted, restore_requested, restored, permanently_deleted
-
-class RestoreRequest(BaseModel):
-    messageId: str
-    requestedBy: str
-    reason: Optional[str] = None
+    createdAt: Optional[str] = None  # تاريخ إنشاء الرسالة الأصلي
 
 class Conversation(BaseModel):
     model_config = ConfigDict(extra="ignore")
