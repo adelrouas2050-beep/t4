@@ -242,6 +242,49 @@ class PromotionUpdate(BaseModel):
     expires: Optional[str] = None
     service: Optional[str] = None
 
+# ============== CHAT MODELS ==============
+
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversationId: str
+    senderId: str
+    senderName: str
+    content: str
+    type: str = "text"  # text, image, file, voice, location
+    fileUrl: Optional[str] = None
+    fileName: Optional[str] = None
+    replyTo: Optional[str] = None
+    read: bool = False
+    createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class MessageCreate(BaseModel):
+    conversationId: str
+    senderId: str
+    senderName: str
+    content: str
+    type: str = "text"
+    fileUrl: Optional[str] = None
+    fileName: Optional[str] = None
+    replyTo: Optional[str] = None
+
+class Conversation(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str = "private"  # private, group, channel
+    name: Optional[str] = None
+    participants: List[str]
+    createdBy: str
+    lastMessage: Optional[str] = None
+    lastMessageAt: Optional[str] = None
+    createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class ConversationCreate(BaseModel):
+    type: str = "private"
+    name: Optional[str] = None
+    participants: List[str]
+    createdBy: str
+
 class Stats(BaseModel):
     totalUsers: int
     totalDrivers: int
