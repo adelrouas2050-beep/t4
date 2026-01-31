@@ -1579,14 +1579,25 @@ const ChatPage = () => {
                 </>
               )}
             </button>
-            <button
-              onClick={() => handleArchiveConversation(convActionMenu.convId)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
-              data-testid="ctx-archive"
-            >
-              <Archive className="w-5 h-5" />
-              {t('أرشفة', 'Archive')}
-            </button>
+            {conversations.find(c => c.id === convActionMenu.convId)?.archived ? (
+              <button
+                onClick={() => handleUnarchiveConversation(convActionMenu.convId)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
+                data-testid="ctx-unarchive"
+              >
+                <ArchiveRestore className="w-5 h-5" />
+                {t('إلغاء الأرشفة', 'Unarchive')}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleArchiveConversation(convActionMenu.convId)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] text-right"
+                data-testid="ctx-archive"
+              >
+                <Archive className="w-5 h-5" />
+                {t('أرشفة', 'Archive')}
+              </button>
+            )}
             <div className="h-px bg-[#232e3c] my-1" />
             <button
               onClick={() => {
@@ -1642,6 +1653,301 @@ const ChatPage = () => {
           </div>
         </div>
       )}
+
+      {/* Story Viewer Modal */}
+      {showStoryViewer && currentStoryUser && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+          <div className="relative w-full h-full max-w-lg">
+            {/* Story Progress Bars */}
+            <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
+              {currentStoryUser.stories.map((_, idx) => (
+                <div key={idx} className="flex-1 h-[3px] bg-white/30 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-white transition-all duration-300 ${
+                      idx < currentStoryIndex ? 'w-full' : idx === currentStoryIndex ? 'w-full animate-progress' : 'w-0'
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Story Header */}
+            <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 border-2 border-white">
+                  <AvatarImage src={currentStoryUser.user.photo} />
+                  <AvatarFallback>{currentStoryUser.user.name?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-white font-medium text-sm">
+                    {language === 'ar' ? currentStoryUser.user.name : currentStoryUser.user.nameEn}
+                  </p>
+                  <p className="text-white/70 text-xs">
+                    {formatTime(currentStoryUser.stories[currentStoryIndex]?.timestamp)}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowStoryViewer(false)}
+                className="text-white hover:bg-white/20 h-10 w-10 p-0"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Story Content */}
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                if (x < rect.width / 2) {
+                  handlePrevStory();
+                } else {
+                  handleNextStory();
+                }
+              }}
+            >
+              {currentStoryUser.stories[currentStoryIndex]?.type === 'image' ? (
+                <img 
+                  src={currentStoryUser.stories[currentStoryIndex].content} 
+                  alt="Story"
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <div 
+                  className="w-full h-full flex items-center justify-center p-8"
+                  style={{ backgroundColor: currentStoryUser.stories[currentStoryIndex]?.backgroundColor || '#5288c1' }}
+                >
+                  <p className="text-white text-2xl font-medium text-center">
+                    {language === 'ar' 
+                      ? currentStoryUser.stories[currentStoryIndex]?.content 
+                      : currentStoryUser.stories[currentStoryIndex]?.contentEn}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Story Caption */}
+            {currentStoryUser.stories[currentStoryIndex]?.caption && (
+              <div className="absolute bottom-20 left-4 right-4 text-center">
+                <p className="text-white text-lg bg-black/50 px-4 py-2 rounded-lg inline-block">
+                  {language === 'ar' 
+                    ? currentStoryUser.stories[currentStoryIndex].caption 
+                    : currentStoryUser.stories[currentStoryIndex].captionEn}
+                </p>
+              </div>
+            )}
+
+            {/* View Count */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-white/70 text-sm">
+                <Eye className="w-4 h-4" />
+                <span>{currentStoryUser.stories[currentStoryIndex]?.viewCount || 0} {t('مشاهدة', 'views')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Story Dialog */}
+      <Dialog open={showAddStory} onOpenChange={setShowAddStory}>
+        <DialogContent className="bg-[#17212b] border-[#232e3c] text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              {t('إضافة ستوري', 'Add Story')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Story Type Tabs */}
+            <div className="flex gap-2">
+              <Button
+                variant={storyType === 'image' ? 'default' : 'outline'}
+                onClick={() => setStoryType('image')}
+                className={storyType === 'image' ? 'bg-[#5288c1] flex-1' : 'border-[#232e3c] text-[#8b9eb0] flex-1'}
+              >
+                <Camera className="w-4 h-4 ml-2" />
+                {t('صورة', 'Image')}
+              </Button>
+              <Button
+                variant={storyType === 'text' ? 'default' : 'outline'}
+                onClick={() => setStoryType('text')}
+                className={storyType === 'text' ? 'bg-[#5288c1] flex-1' : 'border-[#232e3c] text-[#8b9eb0] flex-1'}
+              >
+                <Type className="w-4 h-4 ml-2" />
+                {t('نص', 'Text')}
+              </Button>
+            </div>
+
+            {storyType === 'image' ? (
+              <div>
+                <input
+                  type="file"
+                  ref={storyImageInputRef}
+                  accept="image/*"
+                  onChange={handleStoryImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => storyImageInputRef.current?.click()}
+                  className="w-full h-32 bg-[#232e3c] hover:bg-[#2d3a4a] border-2 border-dashed border-[#3d4d5c]"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Camera className="w-8 h-8 text-[#5288c1]" />
+                    <span className="text-[#8b9eb0]">{t('اختر صورة', 'Choose Image')}</span>
+                  </div>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <textarea
+                  value={storyText}
+                  onChange={(e) => setStoryText(e.target.value)}
+                  placeholder={t('اكتب ستوري...', 'Write your story...')}
+                  className="w-full h-32 bg-[#232e3c] border-0 text-white placeholder:text-[#6c7883] rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#5288c1]"
+                  maxLength={280}
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-[#8b9eb0] text-sm">{t('لون الخلفية', 'Background')}</span>
+                  <div className="flex gap-2">
+                    {['#5288c1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setStoryColor(color)}
+                        className={`w-8 h-8 rounded-full ${storyColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#17212b]' : ''}`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  onClick={handleAddTextStory}
+                  className="w-full bg-[#5288c1] hover:bg-[#4a7ab0]"
+                  disabled={!storyText.trim()}
+                >
+                  {t('نشر الستوري', 'Publish Story')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cloud Storage Dialog */}
+      <Dialog open={showCloudStorage} onOpenChange={setShowCloudStorage}>
+        <DialogContent className="bg-[#17212b] border-[#232e3c] text-white max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Cloud className="w-5 h-5 text-[#5288c1]" />
+              {t('التخزين السحابي', 'Cloud Storage')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Storage Usage */}
+          <div className="bg-[#232e3c] rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#8b9eb0] text-sm">{t('المساحة المستخدمة', 'Storage Used')}</span>
+              <span className="text-white text-sm font-medium">
+                {formatFileSize(getStorageUsed())} / 5 GB
+              </span>
+            </div>
+            <Progress value={(getStorageUsed() / (5 * 1024 * 1024 * 1024)) * 100} className="h-2 bg-[#3d4d5c]" />
+          </div>
+
+          {/* File Type Tabs */}
+          <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
+            {[
+              { id: 'all', label: t('الكل', 'All'), icon: HardDrive },
+              { id: 'image', label: t('صور', 'Images'), icon: ImageIcon },
+              { id: 'video', label: t('فيديو', 'Videos'), icon: Film },
+              { id: 'audio', label: t('صوت', 'Audio'), icon: Music },
+              { id: 'document', label: t('مستندات', 'Docs'), icon: FileText },
+            ].map(tab => (
+              <Button
+                key={tab.id}
+                variant={cloudFileType === tab.id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCloudFileType(tab.id)}
+                className={cloudFileType === tab.id ? 'bg-[#5288c1]' : 'text-[#8b9eb0] hover:text-white'}
+              >
+                <tab.icon className="w-4 h-4 ml-1" />
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Upload Button */}
+          <div className="mb-4">
+            <input
+              type="file"
+              id="cloud-upload"
+              onChange={handleCloudFileUpload}
+              className="hidden"
+            />
+            <label htmlFor="cloud-upload">
+              <Button asChild className="w-full bg-[#5288c1] hover:bg-[#4a7ab0] cursor-pointer">
+                <span>
+                  <Upload className="w-4 h-4 ml-2" />
+                  {t('رفع ملف', 'Upload File')}
+                </span>
+              </Button>
+            </label>
+          </div>
+
+          {/* Files List */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+            {(cloudFileType === 'all' ? cloudFiles : cloudFiles.filter(f => f.type === cloudFileType)).map(file => {
+              const FileIcon = getFileIcon(file.type);
+              return (
+                <div key={file.id} className="flex items-center gap-3 p-3 bg-[#232e3c] rounded-lg hover:bg-[#2d3a4a] transition-colors">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    file.type === 'image' ? 'bg-blue-500/20' :
+                    file.type === 'video' ? 'bg-purple-500/20' :
+                    file.type === 'audio' ? 'bg-green-500/20' :
+                    'bg-orange-500/20'
+                  }`}>
+                    {file.type === 'image' && file.thumbnail ? (
+                      <img src={file.thumbnail} alt="" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <FileIcon className={`w-6 h-6 ${
+                        file.type === 'image' ? 'text-blue-400' :
+                        file.type === 'video' ? 'text-purple-400' :
+                        file.type === 'audio' ? 'text-green-400' :
+                        'text-orange-400'
+                      }`} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">
+                      {language === 'ar' ? file.name : file.nameEn}
+                    </p>
+                    <p className="text-[#8b9eb0] text-xs">
+                      {formatFileSize(file.size)} • {formatTime(file.uploadedAt)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteCloudFile(file.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              );
+            })}
+            
+            {(cloudFileType === 'all' ? cloudFiles : cloudFiles.filter(f => f.type === cloudFileType)).length === 0 && (
+              <div className="text-center py-8">
+                <HardDrive className="w-12 h-12 text-[#3d4d5c] mx-auto mb-2" />
+                <p className="text-[#8b9eb0]">{t('لا توجد ملفات', 'No files')}</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Custom Scrollbar Styles */}
       <style>{`
