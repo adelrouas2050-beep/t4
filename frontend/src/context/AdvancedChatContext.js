@@ -49,19 +49,54 @@ export const AdvancedChatProvider = ({ children }) => {
 
   // Load appropriate data based on user type
   useEffect(() => {
-    if (isTestAccount) {
-      // Test accounts see demo data
-      setConversations(mockConversations);
-      setMessages(mockMessages);
-      setStories(mockStories);
-      setCloudFiles(mockCloudFiles);
-    } else {
-      // New users start with empty data
-      setConversations([]);
-      setMessages({});
-      setStories([]);
-      setCloudFiles([]);
-    }
+    const loadUserData = async () => {
+      if (!user?.userId && !user?.id) {
+        // No user logged in
+        setConversations([]);
+        setMessages({});
+        return;
+      }
+
+      const userId = user.userId || user.id;
+      
+      // جلب المحادثات من قاعدة البيانات
+      try {
+        const response = await fetch(`${API_URL}/api/chat/conversations/${userId}`);
+        if (response.ok) {
+          const dbConversations = await response.json();
+          if (dbConversations.length > 0) {
+            setConversations(dbConversations);
+            // جلب الرسائل لكل محادثة
+            const messagesObj = {};
+            for (const conv of dbConversations) {
+              const msgResponse = await fetch(`${API_URL}/api/chat/messages/${conv.id}`);
+              if (msgResponse.ok) {
+                messagesObj[conv.id] = await msgResponse.json();
+              }
+            }
+            setMessages(messagesObj);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      }
+
+      // إذا لم توجد محادثات في قاعدة البيانات، استخدم البيانات التجريبية للحسابات التجريبية
+      if (isTestAccount) {
+        setConversations(mockConversations);
+        setMessages(mockMessages);
+        setStories(mockStories);
+        setCloudFiles(mockCloudFiles);
+      } else {
+        setConversations([]);
+        setMessages({});
+        setStories([]);
+        setCloudFiles([]);
+      }
+    };
+
+    loadUserData();
   }, [isTestAccount, user]);
 
   const searchUserById = async (userId) => {
