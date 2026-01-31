@@ -190,6 +190,8 @@ const ChatPage = () => {
     if (!messageText.trim() || !activeConversation) return;
 
     if (editingMessage) {
+      // Actually edit the message
+      editMessage(activeConversation.id, editingMessage.id, messageText, messageText);
       toast({
         title: t('تم التعديل', 'Message Edited'),
         description: t('تم تعديل الرسالة بنجاح', 'Message edited successfully')
@@ -228,11 +230,16 @@ const ChatPage = () => {
     });
   };
 
-  const handleDeleteMessage = (messageId) => {
-    toast({
-      title: t('تم الحذف', 'Deleted'),
-      description: t('تم حذف الرسالة', 'Message deleted')
-    });
+  const handleDeleteMessage = (messageId, deleteForBoth = false) => {
+    if (activeConversation) {
+      deleteMessage(activeConversation.id, messageId, deleteForBoth);
+      toast({
+        title: t('تم الحذف', 'Deleted'),
+        description: deleteForBoth 
+          ? t('تم حذف الرسالة من الطرفين', 'Message deleted for both')
+          : t('تم حذف الرسالة', 'Message deleted')
+      });
+    }
   };
 
   const handleReplyToMessage = (message) => {
@@ -242,6 +249,128 @@ const ChatPage = () => {
   const handleEditMessage = (message) => {
     setEditingMessage(message);
     setMessageText(language === 'ar' ? message.text : message.textEn);
+  };
+
+  // Stories handlers
+  const handleOpenStory = (userStories) => {
+    setCurrentStoryUser(userStories);
+    setCurrentStoryIndex(0);
+    setShowStoryViewer(true);
+    // Mark story as viewed
+    if (userStories.stories[0]) {
+      viewStory(userStories.stories[0].id, 'user1');
+    }
+  };
+
+  const handleNextStory = () => {
+    if (currentStoryUser && currentStoryIndex < currentStoryUser.stories.length - 1) {
+      setCurrentStoryIndex(prev => prev + 1);
+      viewStory(currentStoryUser.stories[currentStoryIndex + 1].id, 'user1');
+    } else {
+      setShowStoryViewer(false);
+      setCurrentStoryUser(null);
+      setCurrentStoryIndex(0);
+    }
+  };
+
+  const handlePrevStory = () => {
+    if (currentStoryIndex > 0) {
+      setCurrentStoryIndex(prev => prev - 1);
+    }
+  };
+
+  const handleAddTextStory = () => {
+    if (!storyText.trim()) return;
+    addStory({
+      type: 'text',
+      content: storyText,
+      contentEn: storyText,
+      backgroundColor: storyColor
+    });
+    setStoryText('');
+    setShowAddStory(false);
+    toast({
+      title: t('تمت الإضافة', 'Story Added'),
+      description: t('تم نشر الستوري بنجاح', 'Story published successfully')
+    });
+  };
+
+  const handleStoryImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        addStory({
+          type: 'image',
+          content: reader.result,
+          caption: '',
+          captionEn: ''
+        });
+        setShowAddStory(false);
+        toast({
+          title: t('تمت الإضافة', 'Story Added'),
+          description: t('تم نشر الستوري بنجاح', 'Story published successfully')
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Cloud Storage handlers
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type) => {
+    switch(type) {
+      case 'image': return ImageIcon;
+      case 'video': return Film;
+      case 'audio': return Music;
+      case 'document': return FileText;
+      default: return File;
+    }
+  };
+
+  const handleCloudFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadFile({
+        name: file.name,
+        nameEn: file.name,
+        type: file.type.startsWith('image') ? 'image' 
+          : file.type.startsWith('video') ? 'video'
+          : file.type.startsWith('audio') ? 'audio' 
+          : 'document',
+        size: file.size,
+        url: URL.createObjectURL(file)
+      });
+      toast({
+        title: t('تم الرفع', 'Uploaded'),
+        description: t('تم رفع الملف بنجاح', 'File uploaded successfully')
+      });
+    }
+  };
+
+  const handleDeleteCloudFile = (fileId) => {
+    deleteFile(fileId);
+    toast({
+      title: t('تم الحذف', 'Deleted'),
+      description: t('تم حذف الملف', 'File deleted')
+    });
+  };
+
+  // Archive handlers
+  const handleUnarchiveConversation = (convId) => {
+    unarchiveConversation(convId);
+    toast({
+      title: t('تم إلغاء الأرشفة', 'Unarchived'),
+      description: t('تم استعادة المحادثة', 'Conversation restored')
+    });
+    setConvActionMenu({ show: false, x: 0, y: 0, convId: null });
   };
 
   const handleImageUpload = (e) => {
