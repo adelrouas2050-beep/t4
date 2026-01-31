@@ -1,10 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import json
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
@@ -21,10 +23,18 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Backup directory
+BACKUP_DIR = ROOT_DIR / 'backups'
+BACKUP_DIR.mkdir(exist_ok=True)
+
 # JWT Settings
 JWT_SECRET = os.environ.get('JWT_SECRET', 'transfers-admin-secret-key-2024')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
+
+# Auto backup settings
+AUTO_BACKUP_INTERVAL_HOURS = 6
+last_auto_backup = None
 
 # Create the main app
 app = FastAPI(title="Transfers Admin API")
