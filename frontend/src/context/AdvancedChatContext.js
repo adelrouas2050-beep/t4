@@ -235,10 +235,14 @@ export const AdvancedChatProvider = ({ children }) => {
     return newChannel;
   };
 
-  const sendMessage = (conversationId, messageData) => {
+  const sendMessage = async (conversationId, messageData) => {
+    const userId = user?.userId || user?.id || 'user1';
+    const userName = user?.name || 'مستخدم';
+    
     const newMessage = {
       id: 'msg_' + Date.now(),
-      senderId: 'user1',
+      senderId: userId,
+      senderName: userName,
       ...messageData,
       timestamp: new Date().toISOString(),
       read: false,
@@ -246,6 +250,7 @@ export const AdvancedChatProvider = ({ children }) => {
       deleted: false
     };
 
+    // تحديث الحالة المحلية فوراً
     setMessages({
       ...messages,
       [conversationId]: [...(messages[conversationId] || []), newMessage]
@@ -261,6 +266,26 @@ export const AdvancedChatProvider = ({ children }) => {
       }
       return conv;
     }));
+
+    // حفظ في قاعدة البيانات
+    try {
+      await fetch(`${API_URL}/api/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          senderId: userId,
+          senderName: userName,
+          content: messageData.content || messageData.text || '',
+          type: messageData.type || 'text',
+          fileUrl: messageData.fileUrl,
+          fileName: messageData.fileName,
+          replyTo: messageData.replyTo?.id
+        })
+      });
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
 
     return newMessage;
   };
