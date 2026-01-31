@@ -145,6 +145,30 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/settings" 
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/create-channel" 
+        element={
+          <ProtectedRoute>
+            <CreateChannelPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/create-group" 
+        element={
+          <ProtectedRoute>
+            <CreateGroupPage />
+          </ProtectedRoute>
+        } 
+      />
 
       {/* ============ Admin Panel Routes (New) ============ */}
       <Route path="/admin/login" element={
