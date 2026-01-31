@@ -906,7 +906,7 @@ const ChatPage = () => {
                           )}
                           {conv.lastMessage && (
                             <>
-                              {conv.lastMessage.senderId === 'user1' && conv.type === 'private' && (
+                              {conv.lastMessage.senderId === (user?.userId || user?.id) && conv.type === 'private' && (
                                 <CheckCheck className={`w-[18px] h-[18px] ${conv.lastMessage.read ? 'text-[#4dcd5e]' : 'text-[#6c7883]'}`} />
                               )}
                               <span className="text-[12px] text-[#6c7883]">
