@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userType, setUserType] = useState('rider'); // 'rider', 'driver', or 'admin'
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in from localStorage
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }) => {
       setUserType(savedUserType || 'rider');
       setIsAdmin(savedIsAdmin === 'true');
     }
+    setIsLoading(false);
   }, []);
 
   const login = (email, password, type = 'rider') => {
