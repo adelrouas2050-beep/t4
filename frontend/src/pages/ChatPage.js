@@ -553,38 +553,38 @@ const ChatPage = () => {
     setActiveConversation(null);
   };
 
-  // ============== DELETED MESSAGES FUNCTIONS ==============
+  // ============== DELETED CONVERSATIONS FUNCTIONS ==============
   
   const API_URL = process.env.REACT_APP_BACKEND_URL;
   
-  const fetchMyDeletedMessages = async () => {
+  const fetchMyDeletedConversations = async () => {
     const userId = user?.userId || user?.id;
     if (!userId) return;
     
     setLoadingDeleted(true);
     try {
-      const response = await fetch(`${API_URL}/api/chat/my-deleted-messages/${userId}`);
+      const response = await fetch(`${API_URL}/api/chat/my-deleted-conversations/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        setMyDeletedMessages(data);
+        setMyDeletedMessages(data); // نستخدم نفس الـ state
       }
     } catch (error) {
-      console.error('Error fetching deleted messages:', error);
+      console.error('Error fetching deleted conversations:', error);
     } finally {
       setLoadingDeleted(false);
     }
   };
   
-  const requestRestore = async (messageId, reason = '') => {
+  const requestConversationRestore = async (conversationId, reason = '') => {
     const userId = user?.userId || user?.id;
     if (!userId) return;
     
     try {
-      const response = await fetch(`${API_URL}/api/chat/trash/request-restore`, {
+      const response = await fetch(`${API_URL}/api/chat/trash/request-conversation-restore`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messageId,
+          conversationId,
           requestedBy: userId,
           reason
         })
@@ -595,7 +595,7 @@ const ChatPage = () => {
           title: t('تم إرسال الطلب', 'Request Sent'),
           description: t('سيتم مراجعة طلبك من قبل المدير', 'Your request will be reviewed by admin')
         });
-        fetchMyDeletedMessages(); // تحديث القائمة
+        fetchMyDeletedConversations(); // تحديث القائمة
       } else {
         const error = await response.json();
         toast({
