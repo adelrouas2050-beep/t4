@@ -278,16 +278,16 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <Card className="bg-[#18181b] border-white/10" data-testid="today-rides">
-          <CardContent className="p-5">
+          <CardContent className="p-4 md:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">رحلات اليوم</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">رحلات اليوم</p>
                 {loading ? (
-                  <div className="h-9 w-16 bg-white/5 rounded animate-pulse"></div>
+                  <div className="h-7 md:h-9 w-12 md:w-16 bg-white/5 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-white">{stats.todayRides}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-white">{stats.todayRides}</p>
                 )}
               </div>
               <MiniChart 
@@ -299,14 +299,14 @@ export default function Dashboard() {
         </Card>
 
         <Card className="bg-[#18181b] border-white/10" data-testid="today-orders">
-          <CardContent className="p-5">
+          <CardContent className="p-4 md:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">طلبات اليوم</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">طلبات اليوم</p>
                 {loading ? (
-                  <div className="h-9 w-16 bg-white/5 rounded animate-pulse"></div>
+                  <div className="h-7 md:h-9 w-12 md:w-16 bg-white/5 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-white">{stats.todayOrders}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-white">{stats.todayOrders}</p>
                 )}
               </div>
               <MiniChart 
@@ -318,18 +318,18 @@ export default function Dashboard() {
         </Card>
 
         <Card className="bg-[#18181b] border-white/10" data-testid="pending-orders">
-          <CardContent className="p-5">
+          <CardContent className="p-4 md:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">طلبات معلقة</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">طلبات معلقة</p>
                 {loading ? (
-                  <div className="h-9 w-16 bg-white/5 rounded animate-pulse"></div>
+                  <div className="h-7 md:h-9 w-12 md:w-16 bg-white/5 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-amber-400">{stats.pendingOrders}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-amber-400">{stats.pendingOrders}</p>
                 )}
               </div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-amber-400" strokeWidth={1.5} />
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 text-amber-400" strokeWidth={1.5} />
               </div>
             </div>
           </CardContent>
