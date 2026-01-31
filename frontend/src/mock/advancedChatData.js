@@ -363,3 +363,174 @@ export const chatThemes = [
   { id: 'purple', name: 'بنفسجي', nameEn: 'Purple', colors: { primary: '#8B5CF6', background: '#FFFFFF' } },
   { id: 'pink', name: 'وردي', nameEn: 'Pink', colors: { primary: '#EC4899', background: '#FFFFFF' } }
 ];
+
+// Stories Mock Data
+export const mockStories = [
+  {
+    userId: 'user2',
+    user: {
+      id: 'user2',
+      name: 'أحمد محمد',
+      nameEn: 'Ahmed Mohammed',
+      photo: 'https://randomuser.me/api/portraits/men/1.jpg'
+    },
+    stories: [
+      {
+        id: 'story1',
+        type: 'image',
+        content: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&h=700&fit=crop',
+        caption: 'رحلة جديدة!',
+        captionEn: 'New trip!',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        expiresAt: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString(),
+        views: ['user3', 'user4'],
+        viewCount: 2
+      },
+      {
+        id: 'story2',
+        type: 'image',
+        content: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=700&fit=crop',
+        caption: 'سيارتي الجديدة',
+        captionEn: 'My new car',
+        timestamp: new Date(Date.now() - 1800000).toISOString(),
+        expiresAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
+        views: ['user3'],
+        viewCount: 1
+      }
+    ],
+    hasUnviewed: true
+  },
+  {
+    userId: 'user3',
+    user: {
+      id: 'user3',
+      name: 'فاطمة علي',
+      nameEn: 'Fatima Ali',
+      photo: 'https://randomuser.me/api/portraits/women/1.jpg'
+    },
+    stories: [
+      {
+        id: 'story3',
+        type: 'image',
+        content: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=700&fit=crop',
+        caption: 'يوم جميل',
+        captionEn: 'Beautiful day',
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        expiresAt: new Date(Date.now() + 16 * 60 * 60 * 1000).toISOString(),
+        views: [],
+        viewCount: 0
+      }
+    ],
+    hasUnviewed: true
+  },
+  {
+    userId: 'user4',
+    user: {
+      id: 'user4',
+      name: 'خالد العتيبي',
+      nameEn: 'Khaled Al-Otaibi',
+      photo: 'https://randomuser.me/api/portraits/men/2.jpg'
+    },
+    stories: [
+      {
+        id: 'story4',
+        type: 'text',
+        content: 'اليوم كان يوم مميز في العمل!',
+        contentEn: 'Today was a special day at work!',
+        backgroundColor: '#5288c1',
+        timestamp: new Date(Date.now() - 10800000).toISOString(),
+        expiresAt: new Date(Date.now() + 13 * 60 * 60 * 1000).toISOString(),
+        views: ['user2'],
+        viewCount: 1
+      }
+    ],
+    hasUnviewed: true
+  },
+  {
+    userId: 'user5',
+    user: {
+      id: 'user5',
+      name: 'نورة السعيد',
+      nameEn: 'Noura Al-Saeed',
+      photo: 'https://randomuser.me/api/portraits/women/2.jpg'
+    },
+    stories: [
+      {
+        id: 'story5',
+        type: 'image',
+        content: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=700&fit=crop',
+        caption: 'وجبة لذيذة',
+        captionEn: 'Delicious meal',
+        timestamp: new Date(Date.now() - 5400000).toISOString(),
+        expiresAt: new Date(Date.now() + 18 * 60 * 60 * 1000).toISOString(),
+        views: [],
+        viewCount: 0
+      }
+    ],
+    hasUnviewed: true
+  }
+];
+
+// Cloud Storage Mock Data
+export const mockCloudFiles = [
+  {
+    id: 'file1',
+    name: 'صورة_الرحلة.jpg',
+    nameEn: 'trip_photo.jpg',
+    type: 'image',
+    url: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&h=300&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=100&h=75&fit=crop',
+    size: 2500000, // bytes
+    uploadedAt: new Date(Date.now() - 86400000).toISOString(),
+    uploadedBy: 'user1',
+    folder: 'photos'
+  },
+  {
+    id: 'file2',
+    name: 'فاتورة_الرحلة.pdf',
+    nameEn: 'trip_invoice.pdf',
+    type: 'document',
+    url: '#',
+    size: 150000,
+    uploadedAt: new Date(Date.now() - 172800000).toISOString(),
+    uploadedBy: 'user1',
+    folder: 'documents'
+  },
+  {
+    id: 'file3',
+    name: 'رسالة_صوتية.mp3',
+    nameEn: 'voice_message.mp3',
+    type: 'audio',
+    url: '#',
+    duration: 45,
+    size: 720000,
+    uploadedAt: new Date(Date.now() - 259200000).toISOString(),
+    uploadedBy: 'user1',
+    folder: 'audio'
+  },
+  {
+    id: 'file4',
+    name: 'صورة_السيارة.jpg',
+    nameEn: 'car_photo.jpg',
+    type: 'image',
+    url: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=300&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=100&h=75&fit=crop',
+    size: 3200000,
+    uploadedAt: new Date(Date.now() - 345600000).toISOString(),
+    uploadedBy: 'user1',
+    folder: 'photos'
+  },
+  {
+    id: 'file5',
+    name: 'فيديو_قصير.mp4',
+    nameEn: 'short_video.mp4',
+    type: 'video',
+    url: '#',
+    thumbnail: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?w=100&h=75&fit=crop',
+    duration: 30,
+    size: 15000000,
+    uploadedAt: new Date(Date.now() - 432000000).toISOString(),
+    uploadedBy: 'user1',
+    folder: 'videos'
+  }
+];
