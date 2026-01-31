@@ -989,6 +989,32 @@ export default function Users() {
               )}
             </div>
 
+            {/* Password Field (Required) */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-zinc-300">
+                كلمة المرور <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <Key className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  placeholder="••••••••"
+                  className={`pr-10 bg-white/5 border-white/10 focus:border-indigo-500/50 ${
+                    formErrors.password ? 'border-red-500/50' : ''
+                  }`}
+                  data-testid="add-user-password"
+                />
+              </div>
+              {formErrors.password ? (
+                <p className="text-red-400 text-xs">{formErrors.password}</p>
+              ) : (
+                <p className="text-zinc-500 text-xs">6 أحرف على الأقل</p>
+              )}
+            </div>
+
             {/* Status Field */}
             <div className="space-y-2">
               <Label htmlFor="status" className="text-zinc-300">
