@@ -623,6 +623,12 @@ const ChatPage = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#232e3c]" />
               
+              {/* Cloud Storage */}
+              <DropdownMenuItem onClick={() => setShowCloudStorage(true)} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-cloud">
+                <Cloud className="w-5 h-5" />
+                {t('التخزين السحابي', 'Cloud Storage')}
+              </DropdownMenuItem>
+              
               {/* New Group */}
               <DropdownMenuItem onClick={() => navigate('/create-group')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-new-group">
                 <UsersRound className="w-5 h-5" />
@@ -641,9 +647,12 @@ const ChatPage = () => {
                 <Bookmark className="w-5 h-5" />
                 {t('الرسائل المحفوظة', 'Saved Messages')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-archived">
+              <DropdownMenuItem onClick={() => setActiveFolder('Archived')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-archived">
                 <Archive className="w-5 h-5" />
                 {t('الأرشيف', 'Archived')}
+                {getArchivedCount() > 0 && (
+                  <Badge className="bg-[#5288c1] mr-auto text-xs">{getArchivedCount()}</Badge>
+                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#232e3c]" />
               <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer" data-testid="menu-profile">
