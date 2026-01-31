@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,6 +6,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { Separator } from '../components/ui/separator';
+import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -13,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { 
   Settings as SettingsIcon,
   Globe,
@@ -21,9 +31,205 @@ import {
   Shield,
   Palette,
   Save,
-  RefreshCw
+  RefreshCw,
+  Database,
+  Download,
+  Upload,
+  Clock,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  HardDrive,
+  Calendar
 } from 'lucide-react';
 import { currencies } from '../mock/data';
+import { useToast } from '../hooks/use-toast';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+export default function Settings() {
+  const { language, currency, setCurrency } = useAdmin();
+  const { toast } = useToast();
+  
+  // Backup state
+  const [backups, setBackups] = useState([]);
+  const [backupSettings, setBackupSettings] = useState({
+    auto_backup_enabled: true,
+    interval_hours: 6,
+    last_backup: null,
+    next_backup: null
+  });
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState(null);
+  const [loadingBackups, setLoadingBackups] = useState(true);
+
+  const getToken = () => localStorage.getItem('token');
+
+  // Fetch backups
+  const fetchBackups = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/backup/list`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBackups(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backups:', error);
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  // Fetch backup settings
+  const fetchBackupSettings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/backup/settings`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBackupSettings(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backup settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBackups();
+    fetchBackupSettings();
+  }, []);
+
+  // Create manual backup
+  const handleCreateBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      const response = await fetch(`${API_URL}/api/backup/create`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: 'تم إنشاء النسخة الاحتياطية',
+          description: `تم حفظ النسخة: ${data.filename}`,
+        });
+        fetchBackups();
+        fetchBackupSettings();
+      } else {
+        throw new Error('Backup failed');
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل إنشاء النسخة الاحتياطية',
+        description: 'حدث خطأ أثناء إنشاء النسخة الاحتياطية',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  // Delete backup
+  const handleDeleteBackup = async (backupId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/backup/${backupId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        toast({
+          title: 'تم حذف النسخة الاحتياطية',
+        });
+        fetchBackups();
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل حذف النسخة الاحتياطية',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Restore backup
+  const handleRestoreBackup = async () => {
+    if (!selectedBackup) return;
+    setIsRestoring(true);
+    try {
+      const response = await fetch(`${API_URL}/api/backup/restore/${selectedBackup.id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        toast({
+          title: 'تم استعادة قاعدة البيانات',
+          description: 'تمت استعادة البيانات بنجاح',
+        });
+        setRestoreDialogOpen(false);
+      } else {
+        throw new Error('Restore failed');
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل استعادة النسخة الاحتياطية',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  // Update backup settings
+  const handleUpdateBackupSettings = async (enabled, hours) => {
+    try {
+      const response = await fetch(`${API_URL}/api/backup/settings?auto_backup_enabled=${enabled}&interval_hours=${hours}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (response.ok) {
+        setBackupSettings(prev => ({
+          ...prev,
+          auto_backup_enabled: enabled,
+          interval_hours: hours
+        }));
+        toast({
+          title: 'تم تحديث الإعدادات',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'فشل تحديث الإعدادات',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Format file size
+  const formatSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleString('ar-SA', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
 export default function Settings() {
   const { language, currency, setCurrency } = useAdmin();
