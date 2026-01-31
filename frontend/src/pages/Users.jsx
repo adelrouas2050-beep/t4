@@ -184,9 +184,10 @@ export default function Users() {
     setIsSubmitting(true);
     try {
       const newUser = {
+        username: formData.username.trim().toLowerCase(),
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
+        phone: formData.phone.trim() || null,
         status: formData.status,
         rides: 0,
         orders: 0,
