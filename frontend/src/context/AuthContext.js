@@ -43,6 +43,15 @@ const REGISTERED_USERS = [
     nameEn: 'Test User',
     phone: '+966503456789',
     type: 'rider'
+  },
+  {
+    id: 'user_4',
+    email: 'newuser@example.com',
+    password: 'new123',
+    name: 'مستخدم جديد',
+    nameEn: 'New User',
+    phone: '+966504567890',
+    type: 'rider'
   }
 ];
 
