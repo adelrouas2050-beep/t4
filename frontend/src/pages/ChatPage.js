@@ -539,6 +539,81 @@ const ChatPage = () => {
     setActiveConversation(null);
   };
 
+  // ============== CALL FUNCTIONS ==============
+  
+  const startCall = (type) => {
+    if (!activeConversation) return;
+    
+    setActiveCall({
+      type,
+      status: 'calling',
+      startTime: null,
+      otherUser: activeConversation.otherUser
+    });
+    
+    // محاكاة الاتصال - بعد 3 ثواني يتم الرد
+    setTimeout(() => {
+      setActiveCall(prev => {
+        if (prev && prev.status === 'calling') {
+          return {
+            ...prev,
+            status: 'connected',
+            startTime: new Date()
+          };
+        }
+        return prev;
+      });
+    }, 3000);
+    
+    toast({
+      title: type === 'voice' ? t('جاري الاتصال...', 'Calling...') : t('مكالمة فيديو...', 'Video calling...'),
+      description: activeConversation.otherUser?.name
+    });
+  };
+  
+  const endCall = () => {
+    if (callTimerRef.current) {
+      clearInterval(callTimerRef.current);
+    }
+    
+    const wasConnected = activeCall?.status === 'connected';
+    const duration = callDuration;
+    
+    setActiveCall(null);
+    setCallDuration(0);
+    setIsMuted(false);
+    setIsVideoOff(false);
+    setIsSpeakerOn(false);
+    
+    if (wasConnected) {
+      toast({
+        title: t('انتهت المكالمة', 'Call Ended'),
+        description: t(`مدة المكالمة: ${formatCallDuration(duration)}`, `Duration: ${formatCallDuration(duration)}`)
+      });
+    }
+  };
+  
+  const formatCallDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // تحديث مدة المكالمة
+  useEffect(() => {
+    if (activeCall?.status === 'connected') {
+      callTimerRef.current = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+    }
+    
+    return () => {
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+      }
+    };
+  }, [activeCall?.status]);
+
   const handleChangeBackground = (bg) => {
     setChatBackground(bg);
     toast({
