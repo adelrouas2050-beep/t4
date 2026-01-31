@@ -926,10 +926,28 @@ async def get_user_conversations(user_id: str):
         {"_id": 0}
     ).sort("lastMessageAt", -1).to_list(100)
     
-    # إضافة بيانات المستخدم الآخر لكل محادثة
+    # إضافة بيانات المستخدم الآخر وآخر رسالة لكل محادثة
     result = []
     for conv in conversations:
         conv_data = dict(conv)
+        
+        # جلب آخر رسالة
+        last_msg = await db.messages.find_one(
+            {"conversationId": conv.get("id")},
+            {"_id": 0},
+            sort=[("createdAt", -1)]
+        )
+        if last_msg:
+            conv_data["lastMessage"] = {
+                "id": last_msg.get("id"),
+                "text": last_msg.get("content"),
+                "senderId": last_msg.get("senderId"),
+                "senderName": last_msg.get("senderName"),
+                "timestamp": last_msg.get("createdAt"),
+                "read": last_msg.get("read", False)
+            }
+            conv_data["updatedAt"] = last_msg.get("createdAt")
+        
         if conv.get("type") == "private":
             # إيجاد المستخدم الآخر
             other_user_id = next((p for p in conv.get("participants", []) if p != user_id), None)
