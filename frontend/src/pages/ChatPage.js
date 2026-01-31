@@ -1971,6 +1971,13 @@ const ChatPage = () => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        @keyframes progress {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        .animate-progress {
+          animation: progress 5s linear forwards;
+        }
       `}</style>
 
       {/* Clear History Dialog */}
