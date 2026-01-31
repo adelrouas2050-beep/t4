@@ -1513,36 +1513,80 @@ const ChatPage = () => {
                   <Home className="w-4 h-4 ml-2" />
                   {t('الرئيسية', 'Home')}
                 </Button>
-                <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
+                <Dialog open={searchDialogOpen} onOpenChange={(open) => {
+                    setSearchDialogOpen(open);
+                    if (!open) {
+                      setSearchResults([]);
+                      setSearchQuery('');
+                    }
+                  }}>
                   <DialogTrigger asChild>
                     <Button className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white" data-testid="new-chat-btn">
                       <UserPlus className="w-4 h-4 ml-2" />
                       {t('محادثة جديدة', 'New Chat')}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#17212b] border-[#232e3c] text-white">
+                  <DialogContent className="bg-[#17212b] border-[#232e3c] text-white max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                       <DialogTitle className="text-white">
                         {t('البحث عن مستخدم', 'Search for User')}
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <Input
-                        placeholder={t('أدخل ID المستخدم (مثال: TV12345)', 'Enter User ID (e.g., TV12345)')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearchUser()}
-                        className="h-12 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883]"
-                        data-testid="user-search-input"
-                      />
-                      <Button
-                        onClick={handleSearchUser}
-                        className="w-full bg-[#5288c1] hover:bg-[#4a7ab0]"
-                        data-testid="search-user-btn"
-                      >
-                        <Search className="w-4 h-4 ml-2" />
-                        {t('بحث', 'Search')}
-                      </Button>
+                    <div className="space-y-4 mt-4 flex-1 overflow-hidden flex flex-col">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={t('أدخل اسم المستخدم أو البريد', 'Enter username or email')}
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSearchUser()}
+                          className="h-12 bg-[#242f3d] border-0 text-white placeholder:text-[#6c7883] flex-1"
+                          data-testid="user-search-input"
+                        />
+                        <Button
+                          onClick={handleSearchUser}
+                          className="h-12 bg-[#5288c1] hover:bg-[#4a7ab0] px-6"
+                          data-testid="search-user-btn"
+                          disabled={isSearching}
+                        >
+                          {isSearching ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Search className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {/* نتائج البحث */}
+                      {searchResults.length > 0 && (
+                        <div className="flex-1 overflow-y-auto space-y-2 max-h-[300px]">
+                          <p className="text-[#8b9eb0] text-sm">{t('نتائج البحث', 'Search Results')} ({searchResults.length})</p>
+                          {searchResults.map((user) => (
+                            <div
+                              key={user.userId || user.id}
+                              onClick={() => handleSelectUser(user)}
+                              className="flex items-center gap-3 p-3 rounded-lg bg-[#242f3d] hover:bg-[#2b3848] cursor-pointer transition-colors"
+                              data-testid={`search-result-${user.userId || user.id}`}
+                            >
+                              <img
+                                src={user.photo || `https://ui-avatars.com/api/?name=${user.name}&background=5288c1&color=fff`}
+                                alt={user.name}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">{user.name}</p>
+                                <p className="text-sm text-[#8b9eb0] truncate">@{user.userId || user.id}</p>
+                              </div>
+                              <MessageCircle className="w-5 h-5 text-[#5288c1]" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {searchResults.length === 0 && searchQuery && !isSearching && (
+                        <p className="text-center text-[#8b9eb0] py-4">
+                          {t('لم يتم العثور على نتائج', 'No results found')}
+                        </p>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
