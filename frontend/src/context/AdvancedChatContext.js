@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockConversations, mockMessages, mockUsers, mockGroups, mockStickers, mockGifs, mockStories, mockCloudFiles } from '../mock/advancedChatData';
+import { useAuth } from './AuthContext';
 
 const AdvancedChatContext = createContext();
 
@@ -11,9 +12,23 @@ export const useAdvancedChat = () => {
   return context;
 };
 
+// Test accounts that can see demo data
+const TEST_ACCOUNTS = [
+  'test@test.com',
+  'admin@transfers.com',
+  'rider@transfers.com',
+  'driver@transfers.com'
+];
+
 export const AdvancedChatProvider = ({ children }) => {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [messages, setMessages] = useState(mockMessages);
+  const { user } = useAuth();
+  
+  // Check if current user is a test account
+  const isTestAccount = user?.email && TEST_ACCOUNTS.includes(user.email.toLowerCase());
+  
+  // Initialize with empty data for new users, mock data for test accounts
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState({});
   const [activeConversation, setActiveConversation] = useState(null);
   const [folders, setFolders] = useState(['All', 'Personal', 'Groups', 'Channels', 'Archived']);
   const [activeFolder, setActiveFolder] = useState('All');
@@ -24,11 +39,28 @@ export const AdvancedChatProvider = ({ children }) => {
   const [callInProgress, setCallInProgress] = useState(null);
   
   // Stories state
-  const [stories, setStories] = useState(mockStories);
+  const [stories, setStories] = useState([]);
   const [myStories, setMyStories] = useState([]);
   
   // Cloud Storage state
-  const [cloudFiles, setCloudFiles] = useState(mockCloudFiles);
+  const [cloudFiles, setCloudFiles] = useState([]);
+
+  // Load appropriate data based on user type
+  useEffect(() => {
+    if (isTestAccount) {
+      // Test accounts see demo data
+      setConversations(mockConversations);
+      setMessages(mockMessages);
+      setStories(mockStories);
+      setCloudFiles(mockCloudFiles);
+    } else {
+      // New users start with empty data
+      setConversations([]);
+      setMessages({});
+      setStories([]);
+      setCloudFiles([]);
+    }
+  }, [isTestAccount, user]);
 
   const searchUserById = (userId) => {
     return mockUsers.find(user => user.userId === userId);
