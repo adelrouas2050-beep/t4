@@ -165,6 +165,15 @@ export default function Users() {
       errors.email = 'البريد الإلكتروني مستخدم بالفعل';
     }
     
+    // Password validation (required for new users only)
+    if (!isEdit) {
+      if (!formData.password.trim()) {
+        errors.password = 'كلمة المرور مطلوبة';
+      } else if (formData.password.length < 6) {
+        errors.password = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      }
+    }
+    
     // Phone validation (optional - only validate if provided)
     if (formData.phone.trim() && !/^[\d+\-\s]{8,15}$/.test(formData.phone.replace(/\s/g, ''))) {
       errors.phone = 'رقم الهاتف غير صحيح';
