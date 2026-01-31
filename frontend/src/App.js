@@ -41,7 +41,16 @@ import Settings from './pages/Settings';
 
 // Protected Route for User App
 const ProtectedRoute = ({ children, requiredType }) => {
-  const { isAuthenticated, userType, isAdmin } = useAuth();
+  const { isAuthenticated, userType, isAdmin, isLoading } = useAuth();
+  
+  // Wait for auth to initialize
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#17212b]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#5288c1]"></div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
