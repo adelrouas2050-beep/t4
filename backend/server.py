@@ -224,6 +224,20 @@ class Stats(BaseModel):
     monthlyGrowth: float
     averageRating: float
 
+class BackupInfo(BaseModel):
+    id: str
+    filename: str
+    created_at: str
+    size: int
+    type: str  # manual or auto
+    collections: List[str]
+
+class BackupSettings(BaseModel):
+    auto_backup_enabled: bool = True
+    interval_hours: int = 6
+    last_backup: Optional[str] = None
+    next_backup: Optional[str] = None
+
 # ============== HELPER FUNCTIONS ==============
 
 def hash_password(password: str) -> str:
