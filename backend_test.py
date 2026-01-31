@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Transfers Admin Panel
-Tests all endpoints with JWT authentication
+Backend API Testing for User Registration and Login System
+Tests registration, login, and user validation endpoints
 """
 
 import requests
 import sys
 import json
 from datetime import datetime
+import uuid
 
-class TransfersAPITester:
-    def __init__(self, base_url="https://admin-panel-136.preview.emergentagent.com/api"):
+class UserRegistrationAPITester:
+    def __init__(self, base_url="https://signup-db-connect-1.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
+        self.test_user_id = f"testuser_{datetime.now().strftime('%H%M%S')}"
+        self.test_email = f"test_{datetime.now().strftime('%H%M%S')}@example.com"
 
     def log_result(self, test_name, success, response_data=None, error=None):
         """Log test results"""
