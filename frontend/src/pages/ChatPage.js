@@ -710,6 +710,126 @@ const ChatPage = () => {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[#17212b] overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      
+      {/* ============== CALL OVERLAY ============== */}
+      {activeCall && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center">
+          {/* خلفية الفيديو للمكالمات المرئية */}
+          {activeCall.type === 'video' && activeCall.status === 'connected' && !isVideoOff && (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#232e3c] to-[#0e1621]">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-[#5288c1] text-lg">{t('كاميرا المستخدم الآخر', 'Other user camera')}</div>
+              </div>
+            </div>
+          )}
+          
+          {/* معلومات المكالمة */}
+          <div className="relative z-10 flex flex-col items-center">
+            {/* صورة المستخدم */}
+            <div className={`w-32 h-32 rounded-full bg-gradient-to-br from-[#5288c1] to-[#7a5fca] flex items-center justify-center mb-6 ${activeCall.status === 'calling' ? 'animate-pulse' : ''}`}>
+              {activeCall.otherUser?.photo ? (
+                <img src={activeCall.otherUser.photo} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <span className="text-white text-4xl font-bold">
+                  {activeCall.otherUser?.name?.charAt(0) || '?'}
+                </span>
+              )}
+            </div>
+            
+            {/* اسم المستخدم */}
+            <h2 className="text-white text-2xl font-semibold mb-2">
+              {activeCall.otherUser?.name || t('مستخدم', 'User')}
+            </h2>
+            
+            {/* حالة المكالمة */}
+            <p className="text-[#8b9eb0] text-lg mb-8">
+              {activeCall.status === 'calling' && (
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                  {t('جاري الاتصال...', 'Calling...')}
+                </span>
+              )}
+              {activeCall.status === 'connected' && (
+                <span className="text-green-400 font-mono text-xl">
+                  {formatCallDuration(callDuration)}
+                </span>
+              )}
+            </p>
+            
+            {/* نوع المكالمة */}
+            <div className="flex items-center gap-2 mb-8 text-[#5288c1]">
+              {activeCall.type === 'voice' ? (
+                <>
+                  <Phone className="w-5 h-5" />
+                  <span>{t('مكالمة صوتية', 'Voice Call')}</span>
+                </>
+              ) : (
+                <>
+                  <Video className="w-5 h-5" />
+                  <span>{t('مكالمة فيديو', 'Video Call')}</span>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* أزرار التحكم */}
+          <div className="relative z-10 flex items-center gap-4">
+            {/* كتم الصوت */}
+            <Button
+              onClick={() => setIsMuted(!isMuted)}
+              className={`w-14 h-14 rounded-full ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-[#232e3c] hover:bg-[#2d3a4a]'}`}
+              data-testid="mute-btn"
+            >
+              {isMuted ? <VolumeX className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+            </Button>
+            
+            {/* إيقاف الفيديو (للمكالمات المرئية فقط) */}
+            {activeCall.type === 'video' && (
+              <Button
+                onClick={() => setIsVideoOff(!isVideoOff)}
+                className={`w-14 h-14 rounded-full ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-[#232e3c] hover:bg-[#2d3a4a]'}`}
+                data-testid="video-off-btn"
+              >
+                {isVideoOff ? <ImageOff className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
+              </Button>
+            )}
+            
+            {/* مكبر الصوت */}
+            <Button
+              onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+              className={`w-14 h-14 rounded-full ${isSpeakerOn ? 'bg-[#5288c1] hover:bg-[#4a7ab0]' : 'bg-[#232e3c] hover:bg-[#2d3a4a]'}`}
+              data-testid="speaker-btn"
+            >
+              <Volume2 className="w-6 h-6 text-white" />
+            </Button>
+            
+            {/* إنهاء المكالمة */}
+            <Button
+              onClick={endCall}
+              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600"
+              data-testid="end-call-btn"
+            >
+              <Phone className="w-7 h-7 text-white rotate-[135deg]" />
+            </Button>
+          </div>
+          
+          {/* الكاميرا الصغيرة (للمكالمات المرئية) */}
+          {activeCall.type === 'video' && activeCall.status === 'connected' && (
+            <div className="absolute bottom-32 left-4 w-32 h-44 bg-[#232e3c] rounded-xl overflow-hidden border-2 border-[#5288c1] shadow-lg">
+              {isVideoOff ? (
+                <div className="w-full h-full flex items-center justify-center bg-[#1a2836]">
+                  <ImageOff className="w-8 h-8 text-[#6c7883]" />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#5288c1] to-[#7a5fca]">
+                  <span className="text-white text-xs">{t('الكاميرا', 'Camera')}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Sidebar */}
       <div className={`${!activeConversation ? 'flex' : 'hidden md:flex'} w-full md:w-[320px] bg-[#17212b] md:border-l border-[#232e3c] flex-col transition-all duration-300 overflow-hidden`}>
         {/* Sidebar Header */}
