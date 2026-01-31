@@ -4,6 +4,9 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import EmojiPicker from 'emoji-picker-react';
 import {
   Dialog,
@@ -33,7 +36,9 @@ import {
   BellOff, Settings, Moon, Archive, Bookmark,
   Home, Bell, Palette, UserX, Users, ChevronLeft,
   PinOff, Volume2, VolumeX, ImageOff, Forward, Square, CheckSquare,
-  Radio, Plus, Megaphone, UsersRound, MessageSquare, Hash
+  Radio, Plus, Megaphone, UsersRound, MessageSquare, Hash,
+  Cloud, File, FileText, Music, Film, HardDrive, Upload, Eye, ChevronRight,
+  Camera, Type, CirclePlus, ArchiveRestore
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
@@ -52,13 +57,30 @@ const ChatPage = () => {
     markAsRead,
     getTotalUnreadCount,
     getFilteredConversations,
+    getArchivedCount,
     folders,
     activeFolder,
     setActiveFolder,
     togglePin,
     toggleMute,
     archiveConversation,
-    deleteConversation
+    unarchiveConversation,
+    deleteConversation,
+    editMessage,
+    deleteMessage,
+    // Stories
+    stories,
+    myStories,
+    addStory,
+    viewStory,
+    deleteStory,
+    getActiveStories,
+    // Cloud Storage
+    cloudFiles,
+    uploadFile,
+    deleteFile,
+    getCloudFiles,
+    getStorageUsed
   } = useAdvancedChat();
   const { toast } = useToast();
 
@@ -80,10 +102,26 @@ const ChatPage = () => {
   const [selectedMessages, setSelectedMessages] = useState([]);
   const [convActionMenu, setConvActionMenu] = useState({ show: false, x: 0, y: 0, convId: null });
   const [showNewMenu, setShowNewMenu] = useState(false);
+  
+  // Stories state
+  const [showStoryViewer, setShowStoryViewer] = useState(false);
+  const [currentStoryUser, setCurrentStoryUser] = useState(null);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [showAddStory, setShowAddStory] = useState(false);
+  const [storyType, setStoryType] = useState('image');
+  const [storyText, setStoryText] = useState('');
+  const [storyColor, setStoryColor] = useState('#5288c1');
+  
+  // Cloud Storage state
+  const [showCloudStorage, setShowCloudStorage] = useState(false);
+  const [cloudFileType, setCloudFileType] = useState('all');
+  
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const storyImageInputRef = useRef(null);
   const longPressTimer = useRef(null);
+  const storyTimerRef = useRef(null);
   const MAX_PINNED = 5;
 
   // Tab definitions for Telegram-like navigation
@@ -92,6 +130,7 @@ const ChatPage = () => {
     { id: 'Personal', label: t('شخصي', 'Personal'), icon: User },
     { id: 'Groups', label: t('مجموعات', 'Groups'), icon: UsersRound },
     { id: 'Channels', label: t('قنوات', 'Channels'), icon: Megaphone },
+    { id: 'Archived', label: t('الأرشيف', 'Archived'), icon: Archive, count: getArchivedCount() },
   ];
 
   const scrollToBottom = () => {
