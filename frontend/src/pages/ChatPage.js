@@ -158,33 +158,51 @@ const ChatPage = () => {
     }
   }, [messageText]);
 
-  const handleSearchUser = () => {
+  const handleSearchUser = async () => {
     if (!searchQuery.trim()) {
       toast({
         title: t('خطأ', 'Error'),
-        description: t('الرجاء إدخال ID المستخدم', 'Please enter user ID'),
+        description: t('الرجاء إدخال اسم المستخدم', 'Please enter username'),
         variant: 'destructive'
       });
       return;
     }
 
-    const foundUser = searchUserById(searchQuery.toUpperCase());
-    if (foundUser) {
-      const conv = getOrCreateConversation(foundUser.id);
-      if (conv) {
-        setActiveConversation(conv);
-        setSearchDialogOpen(false);
-        setSearchQuery('');
+    setIsSearching(true);
+    
+    // البحث في قاعدة البيانات
+    const results = await searchUsers(searchQuery);
+    
+    if (results && results.length > 0) {
+      setSearchResults(results);
+      setIsSearching(false);
+    } else {
+      // محاولة البحث بالـ ID المباشر
+      const foundUser = await searchUserById(searchQuery.toUpperCase());
+      if (foundUser) {
+        setSearchResults([foundUser]);
+      } else {
+        setSearchResults([]);
         toast({
-          title: t('تم العثور على المستخدم', 'User Found'),
-          description: language === 'ar' ? foundUser.name : foundUser.nameEn
+          title: t('لم يتم العثور', 'Not Found'),
+          description: t('لا يوجد مستخدم بهذا الاسم', 'No user with this name'),
+          variant: 'destructive'
         });
       }
-    } else {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectUser = (selectedUser) => {
+    const conv = getOrCreateConversation(selectedUser.userId || selectedUser.id, selectedUser);
+    if (conv) {
+      setActiveConversation(conv);
+      setSearchDialogOpen(false);
+      setSearchQuery('');
+      setSearchResults([]);
       toast({
-        title: t('لم يتم العثور', 'Not Found'),
-        description: t('لا يوجد مستخدم بهذا الـ ID', 'No user with this ID'),
-        variant: 'destructive'
+        title: t('تم بدء المحادثة', 'Chat Started'),
+        description: language === 'ar' ? selectedUser.name : selectedUser.nameEn
       });
     }
   };
