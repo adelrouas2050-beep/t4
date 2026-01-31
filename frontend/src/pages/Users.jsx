@@ -652,6 +652,9 @@ export default function Users() {
                   />
                   <div>
                     <p>{selectedUser.name}</p>
+                    {selectedUser.username && (
+                      <p className="text-sm text-indigo-400 font-mono">@{selectedUser.username}</p>
+                    )}
                     <Badge className={`${statusColors[selectedUser.status]} border text-xs`}>
                       {statusLabels[selectedUser.status]}
                     </Badge>
@@ -669,7 +672,7 @@ export default function Users() {
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Phone className="w-4 h-4" />
-                  <span className="text-sm font-mono">{selectedUser.phone}</span>
+                  <span className="text-sm font-mono">{selectedUser.phone || 'غير محدد'}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-zinc-400">
