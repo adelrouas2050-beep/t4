@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for User Registration and Login System
-Tests registration, login, and user validation endpoints
+Comprehensive Backend API Testing for Arabic Database Application
+Tests all endpoints: users, chat, drivers, rides, orders, restaurants, stats
 """
 
 import requests
@@ -9,16 +9,30 @@ import sys
 import json
 from datetime import datetime
 import uuid
+import time
 
-class UserRegistrationAPITester:
+class ComprehensiveAPITester:
     def __init__(self, base_url="https://signup-db-connect-1.preview.emergentagent.com/api"):
         self.base_url = base_url
-        self.token = None
+        self.admin_token = None
+        self.user_token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
         self.test_user_id = f"testuser_{datetime.now().strftime('%H%M%S')}"
+        self.test_user_id2 = f"testuser2_{datetime.now().strftime('%H%M%S')}"
         self.test_email = f"test_{datetime.now().strftime('%H%M%S')}@example.com"
+        self.test_email2 = f"test2_{datetime.now().strftime('%H%M%S')}@example.com"
+        
+        # Store created IDs for cleanup and reference
+        self.created_ids = {
+            'driver_id': None,
+            'restaurant_id': None,
+            'ride_id': None,
+            'order_id': None,
+            'conversation_id': None,
+            'message_id': None
+        }
 
     def log_result(self, test_name, success, response_data=None, error=None):
         """Log test results"""
