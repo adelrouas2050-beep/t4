@@ -65,28 +65,8 @@ export const AdvancedChatProvider = ({ children }) => {
         if (response.ok) {
           const dbConversations = await response.json();
           if (dbConversations.length > 0) {
-            // إضافة بيانات المستخدم الآخر لكل محادثة
-            const conversationsWithUsers = await Promise.all(
-              dbConversations.map(async (conv) => {
-                if (conv.type === 'private') {
-                  const otherUserId = conv.participants.find(p => p !== userId);
-                  if (otherUserId) {
-                    try {
-                      const userResponse = await fetch(`${API_URL}/api/auth/user/${otherUserId}`);
-                      if (userResponse.ok) {
-                        const otherUserData = await userResponse.json();
-                        return { ...conv, otherUser: otherUserData };
-                      }
-                    } catch (e) {
-                      console.error('Error fetching other user:', e);
-                    }
-                  }
-                }
-                return conv;
-              })
-            );
-            
-            setConversations(conversationsWithUsers);
+            // المحادثات تأتي مع otherUser من الـ Backend
+            setConversations(dbConversations);
             
             // جلب الرسائل لكل محادثة
             const messagesObj = {};
