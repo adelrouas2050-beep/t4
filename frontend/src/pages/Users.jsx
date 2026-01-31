@@ -86,6 +86,7 @@ const statusLabels = {
 
 // Initial form state
 const initialFormState = {
+  username: '',
   name: '',
   email: '',
   phone: '',
