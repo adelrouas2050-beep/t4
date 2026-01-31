@@ -776,6 +776,10 @@ async def delete_promotion(promotion_id: str, payload: dict = Depends(verify_tok
 async def get_stats(payload: dict = Depends(verify_token)):
     # Get counts from database
     total_users = await db.users.count_documents({})
+    # إضافة المستخدمين المسجلين
+    total_registered = await db.registered_users.count_documents({})
+    total_users = total_users + total_registered
+    
     total_drivers = await db.drivers.count_documents({})
     total_restaurants = await db.restaurants.count_documents({})
     total_rides = await db.rides.count_documents({})
