@@ -69,6 +69,7 @@ const ChatPage = () => {
     deleteConversation,
     editMessage,
     deleteMessage,
+    clearConversationHistory,
     // Stories
     stories,
     myStories,
