@@ -1886,6 +1886,101 @@ const ChatPage = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {/* Dialog: My Deleted Messages */}
+                <Dialog open={showDeletedMessages} onOpenChange={setShowDeletedMessages}>
+                  <DialogContent className="bg-[#17212b] border-[#232e3c] text-white max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                      <DialogTitle className="text-white flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-red-400" />
+                        {t('رسائلي المحذوفة', 'My Deleted Messages')}
+                      </DialogTitle>
+                    </DialogHeader>
+                    
+                    <p className="text-[#8b9eb0] text-sm mb-4">
+                      {t('يمكنك طلب استعادة الرسائل المحذوفة خلال 30 يوم. سيتم مراجعة طلبك من قبل المدير.', 
+                         'You can request to restore deleted messages within 30 days. Your request will be reviewed by admin.')}
+                    </p>
+                    
+                    <div className="flex-1 overflow-y-auto space-y-3 max-h-[400px]">
+                      {loadingDeleted ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-[#5288c1]" />
+                        </div>
+                      ) : myDeletedMessages.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Trash2 className="w-12 h-12 mx-auto text-[#3a4a5c] mb-3" />
+                          <p className="text-[#8b9eb0]">{t('لا توجد رسائل محذوفة', 'No deleted messages')}</p>
+                        </div>
+                      ) : (
+                        myDeletedMessages.map((msg) => (
+                          <div 
+                            key={msg.id} 
+                            className="bg-[#242f3d] rounded-lg p-3 border border-[#2d3a4a]"
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-[#5288c1]/20 flex items-center justify-center">
+                                  <User className="w-4 h-4 text-[#5288c1]" />
+                                </div>
+                                <span className="text-white text-sm font-medium">{msg.senderName}</span>
+                              </div>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                msg.status === 'restore_requested' ? 'bg-yellow-500/20 text-yellow-400' :
+                                msg.status === 'restored' ? 'bg-green-500/20 text-green-400' :
+                                msg.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                'bg-[#3a4a5c] text-[#8b9eb0]'
+                              }`}>
+                                {msg.status === 'restore_requested' ? t('قيد المراجعة', 'Pending') :
+                                 msg.status === 'restored' ? t('تم الاستعادة', 'Restored') :
+                                 msg.status === 'rejected' ? t('مرفوض', 'Rejected') :
+                                 t('محذوفة', 'Deleted')}
+                              </span>
+                            </div>
+                            
+                            <p className="text-[#c4ccd4] text-sm mb-2 line-clamp-2">{msg.content}</p>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-xs text-[#6c7883]">
+                                <Clock className="w-3 h-3" />
+                                <span>{t('متبقي', 'Remaining')}: {getRemainingDays(msg.expiresAt)} {t('يوم', 'days')}</span>
+                              </div>
+                              
+                              {msg.status === 'deleted' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    const reason = prompt(t('سبب طلب الاستعادة (اختياري):', 'Reason for restore request (optional):'));
+                                    requestRestore(msg.originalMessageId, reason || '');
+                                  }}
+                                  className="bg-[#5288c1] hover:bg-[#4a7ab0] text-white text-xs h-7"
+                                  data-testid={`request-restore-${msg.originalMessageId}`}
+                                >
+                                  <RotateCcw className="w-3 h-3 ml-1" />
+                                  {t('طلب استعادة', 'Request Restore')}
+                                </Button>
+                              )}
+                              
+                              {msg.status === 'restore_requested' && (
+                                <span className="text-yellow-400 text-xs flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {t('في انتظار موافقة المدير', 'Waiting for admin approval')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    
+                    <div className="mt-4 pt-3 border-t border-[#232e3c]">
+                      <p className="text-xs text-[#6c7883] flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {t('الرسائل تُحذف نهائياً بعد 30 يوم من الحذف', 'Messages are permanently deleted after 30 days')}
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
