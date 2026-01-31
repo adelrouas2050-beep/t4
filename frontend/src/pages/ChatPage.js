@@ -1280,6 +1280,15 @@ const ChatPage = () => {
                 <Megaphone className="w-5 h-5" />
                 {t('قناة جديدة', 'New Channel')}
               </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-[#232e3c]" />
+              <DropdownMenuItem 
+                onClick={() => { setShowNewMenu(false); setShowDeletedMessages(true); fetchMyDeletedMessages(); }}
+                className="gap-3 text-[#8b9eb0] hover:text-white hover:bg-[#232e3c] cursor-pointer"
+                data-testid="my-deleted-messages"
+              >
+                <Trash2 className="w-5 h-5 text-red-400" />
+                {t('رسائلي المحذوفة', 'My Deleted Messages')}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
