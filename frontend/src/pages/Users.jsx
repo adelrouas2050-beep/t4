@@ -320,7 +320,11 @@ export default function Users() {
             <RefreshCw className={`w-4 h-4 ml-1 md:ml-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">تحديث</span>
           </Button>
-          <Button className="bg-indigo-500 hover:bg-indigo-600 text-white btn-glow" data-testid="add-user-btn">
+          <Button 
+            onClick={() => setShowAddUserDialog(true)}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white btn-glow" 
+            data-testid="add-user-btn"
+          >
             <Plus className="w-4 h-4 ml-1 md:ml-2" />
             <span className="hidden sm:inline">إضافة مستخدم</span>
             <span className="sm:hidden">إضافة</span>
